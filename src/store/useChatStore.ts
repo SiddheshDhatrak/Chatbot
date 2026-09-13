@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Theme } from "@/lib/theme";
+import { getModel, setStoredModel } from "@/lib/models";
 import {
   chatEvents,
   listSessions,
@@ -38,9 +39,11 @@ interface ChatState {
   artifactOpen: boolean;
   sidebarOpen: boolean;
   theme: Theme;
+  model: string;
   abortFlag: boolean;
 
   setTheme: (t: Theme) => void;
+  setModel: (m: string) => void;
   setSidebarOpen: (v: boolean) => void;
   setArtifactOpen: (v: boolean) => void;
   newChat: () => string;
@@ -85,9 +88,14 @@ export const useChatStore = create<ChatState>()(
       artifactOpen: false,
       sidebarOpen: true,
       theme: "noir",
+      model: typeof window !== "undefined" ? getModel() : "openai/gpt-oss-120b",
       abortFlag: false,
 
       setTheme: (t) => set({ theme: t }),
+      setModel: (m) => {
+        setStoredModel(m);
+        set({ model: m });
+      },
       setSidebarOpen: (v) => set({ sidebarOpen: v }),
       setArtifactOpen: (v) => set({ artifactOpen: v }),
 
@@ -235,7 +243,7 @@ export const useChatStore = create<ChatState>()(
         let failed: string | null = null;
 
         try {
-          for await (const ev of chatEvents(postId, text, signal)) {
+          for await (const ev of chatEvents(postId, text, signal, get().model)) {
             if (ev.type === "session") {
               serverId = ev.sessionId;
               if (tempSession) {
@@ -362,7 +370,7 @@ export const useChatStore = create<ChatState>()(
             method: "POST",
             signal: aborter.signal,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionId: activeId, message: lastUser.text, regenerate: true }),
+            body: JSON.stringify({ sessionId: activeId, message: lastUser.text, regenerate: true, model: get().model }),
           });
           const reader = res.body?.getReader();
           const decoder = new TextDecoder();
@@ -443,7 +451,7 @@ export const useChatStore = create<ChatState>()(
     }),
     {
       name: "claude-luxe-store-v2",
-      partialize: (s) => ({ theme: s.theme, sidebarOpen: s.sidebarOpen }) as ChatState,
+      partialize: (s) => ({ theme: s.theme, sidebarOpen: s.sidebarOpen, model: s.model }) as ChatState,
     },
   ),
 );

@@ -11,7 +11,7 @@ export const SYSTEM_PROMPT =
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const POLLINATIONS_URL = "https://text.pollinations.ai/openai";
 
-function model() {
+function defaultModel() {
   return process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 }
 
@@ -67,6 +67,7 @@ async function* parseSSE(
 async function* groqStream(
   messages: ChatMsg[],
   signal?: AbortSignal,
+  model?: string,
 ): AsyncGenerator<string> {
   const key = process.env.GROQ_API_KEY;
   if (!key) throw new Error("GROQ_API_KEY is not set");
@@ -78,7 +79,7 @@ async function* groqStream(
       Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      model: model(),
+      model: model || defaultModel(),
       messages,
       stream: true,
       temperature: 0.7,
@@ -138,11 +139,11 @@ async function* pollinationsStream(
  */
 export async function* streamReply(
   messages: ChatMsg[],
-  opts?: { signal?: AbortSignal },
+  opts?: { signal?: AbortSignal; model?: string },
 ): AsyncGenerator<string> {
   const signal = opts?.signal;
   if (process.env.GROQ_API_KEY) {
-    yield* groqStream(messages, signal);
+    yield* groqStream(messages, signal, opts?.model);
     return;
   }
   yield* pollinationsStream(messages, signal);

@@ -17,13 +17,13 @@ import { useChatStore } from "@/store/useChatStore";
 import { getTheme } from "@/lib/theme";
 import { StarMark } from "@/components/StarMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ModelPicker } from "@/components/ModelPicker";
+import { ShareButton } from "@/components/ShareButton";
 import { WelcomeHero } from "@/features/chat/WelcomeHero";
 import { MessageList } from "@/features/chat/MessageList";
 import { Composer } from "@/features/chat/Composer";
 import { ArtifactPanel } from "@/features/chat/ArtifactPanel";
 import { cn, groupLabel } from "@/lib/cn";
-
-const MODEL_LABEL = "Groq · Llama 3.3 70B";
 
 export default function ChatClient({ sessionId }: { sessionId?: string }) {
   const router = useRouter();
@@ -52,6 +52,8 @@ export default function ChatClient({ sessionId }: { sessionId?: string }) {
 
   const active = sessions.find((s) => s.id === (sessionId ?? activeId));
   const messages = active?.messages ?? [];
+  const shareId = sessionId ?? activeId;
+  const shareable = !!shareId && !shareId.startsWith("local-");
 
   const groups = useMemo(() => {
     const filtered = sessions.filter((s) =>
@@ -197,9 +199,7 @@ export default function ChatClient({ sessionId }: { sessionId?: string }) {
                 <PanelLeftOpen size={17} />
               </button>
             )}
-            <span className="px-3 py-1.5 rounded-full hairline bg-[var(--background-elev)] text-[13px] font-medium">
-              {MODEL_LABEL}
-            </span>
+            <ModelPicker />
             <span className="hidden lg:block text-[13px] text-[var(--muted)] truncate max-w-[280px] ml-2">
               {active?.title ?? "New conversation"}
             </span>
@@ -211,6 +211,10 @@ export default function ChatClient({ sessionId }: { sessionId?: string }) {
             >
               Maison
             </Link>
+            <ShareButton
+              getUrl={() => (shareable ? `${window.location.origin}/chat/${shareId}` : null)}
+              disabled={!shareable}
+            />
             <ThemeToggle />
           </div>
         </header>

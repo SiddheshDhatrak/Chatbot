@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Command } from "cmdk";
 import { useNavigate } from "react-router-dom";
-import { MessageSquarePlus, SunMedium, MoonStar, Search, Home } from "lucide-react";
+import { MessageSquarePlus, SunMedium, Home, Search } from "lucide-react";
 import { useChatStore } from "@/store/useChatStore";
 import { toggleTheme } from "@/lib/theme";
 
@@ -19,8 +19,13 @@ export function CommandPalette() {
         setOpen((v) => !v);
       }
     };
+    const custom = () => setOpen(true);
     window.addEventListener("keydown", fn);
-    return () => window.removeEventListener("keydown", fn);
+    window.addEventListener("claude:palette", custom);
+    return () => {
+      window.removeEventListener("keydown", fn);
+      window.removeEventListener("claude:palette", custom);
+    };
   }, []);
 
   if (!open) return null;
@@ -75,7 +80,6 @@ export function CommandPalette() {
                 setOpen(false);
               }}
             />
-            <Item icon={<MoonStar size={14} />} label="Search docs…" onSelect={() => setOpen(false)} />
           </Command.Group>
           <Command.Group heading="Recent" className="text-[11px] uppercase tracking-widest text-[var(--muted)] px-2 py-1 mt-2">
             {sessions.slice(0, 6).map((s) => (

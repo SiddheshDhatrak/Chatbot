@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/server/db";
 import { streamReply, SYSTEM_PROMPT, type ChatMsg } from "@/server/ai";
+import { sanitizeModel } from "@/lib/models";
 
 export const runtime = "nodejs";
 
@@ -22,7 +23,7 @@ function sse(data: string) {
  *   data: {"error":"..."}   (failure, also persisted as assistant message)
  */
 export async function POST(req: NextRequest) {
-  let body: { sessionId?: string; message?: string; regenerate?: boolean };
+  let body: { sessionId?: string; message?: string; regenerate?: boolean; model?: string };
   try {
     body = await req.json();
   } catch {
@@ -31,8 +32,9 @@ export async function POST(req: NextRequest) {
 
   const message = (body.message ?? "").trim();
   if (!message) return Response.json({ error: "Empty message" }, { status: 400 });
-  if (message.length > 12000)
-    return Response.json({ error: "Message too long (max 12000 chars)" }, { status: 413 });
+  if (message.length > 24000)
+    return Response.json({ error: "Message too long (max 24000 chars)" }, { status: 413 });
+  const model = sanitizeModel(body.model) ?? undefined;
 
   // Resolve or create the session, then persist the user message.
   let session = body.sessionId
@@ -79,7 +81,7 @@ export async function POST(req: NextRequest) {
       const push = (s: string) => controller.enqueue(enc.encode(s));
       push(sse(JSON.stringify({ sessionId })));
       try {
-        for await (const delta of streamReply(chat, { signal: clientGone })) {
+        for await (const delta of streamReply(chat, { signal: clientGone, model })) {
           if (clientGone.aborted) break;
           full += delta;
           push(sse(JSON.stringify({ delta })));

@@ -4,12 +4,11 @@ import {
   ArrowRight,
   ArrowUpRight,
   Code2,
-  Eye,
-  Layers,
-  MemoryStick,
+  Database,
+  Search,
   Sparkles,
   Check,
-  Star,
+  Zap,
 } from "lucide-react";
 import { StarMark } from "@/components/StarMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -22,6 +21,12 @@ const fade = (delay = 0) => ({
   transition: { delay, duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
 });
 
+const NAV_LINKS = [
+  { label: "Atelier", href: "#atelier" },
+  { label: "How it works", href: "#how" },
+  { label: "Storage", href: "#storage" },
+];
+
 export function LandingNav() {
   return (
     <nav className="fixed top-0 inset-x-0 z-50">
@@ -32,9 +37,9 @@ export function LandingNav() {
             <span className="font-display text-[18px]">Claude</span>
           </Link>
           <div className="hidden md:flex items-center gap-7 text-[13.5px] text-[var(--foreground-dim)]">
-            {["Atelier", "Artifacts", "Mémoire", "Tarifs"].map((l) => (
-              <a key={l} href={`#${l.toLowerCase()}`} className="hover:text-[var(--foreground)] transition">
-                {l}
+            {NAV_LINKS.map((l) => (
+              <a key={l.href} href={l.href} className="hover:text-[var(--foreground)] transition">
+                {l.label}
               </a>
             ))}
           </div>
@@ -55,7 +60,7 @@ export function LandingHero() {
     <section className="relative pt-[150px] md:pt-[170px] pb-16 px-4 text-center overflow-hidden">
       <motion.div {...fade(0)} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full hairline glass text-[12px] text-[var(--foreground-dim)]">
         <Sparkles size={13} className="text-[var(--accent)]" />
-        Claude Opus 4.5 — now composing in the salon
+        Groq-powered streaming · SQLite-backed history
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
       </motion.div>
       <motion.h1
@@ -67,19 +72,19 @@ export function LandingHero() {
         <span className="italic champagne-text">tailored like couture.</span>
       </motion.h1>
       <motion.p {...fade(0.16)} className="mt-6 text-[15px] md:text-[17px] text-[var(--muted)] max-w-[620px] mx-auto leading-relaxed">
-        The AI companion for those who notice everything — reasoning, writing and code,
-        presented in an interface worthy of your finest hours.
+        A self-hosted chat salon: pick a Groq model, stream replies live, and keep
+        every conversation in your own SQLite database. No accounts, no tiers.
       </motion.p>
       <motion.div {...fade(0.24)} className="mt-9 flex items-center justify-center gap-3 flex-wrap">
         <Link to="/chat">
           <Button size="lg">Begin composing <ArrowRight size={16} /></Button>
         </Link>
         <a href="#atelier">
-          <Button size="lg" variant="outline">Visit the atelier</Button>
+          <Button size="lg" variant="outline">See what it does</Button>
         </a>
       </motion.div>
 
-      {/* product frame */}
+      {/* product frame — stylized preview of the real workspace */}
       <motion.div
         initial={{ y: 80, opacity: 0, rotateX: 12 }}
         whileInView={{ y: 0, opacity: 1, rotateX: 0 }}
@@ -95,7 +100,7 @@ export function LandingHero() {
               ))}
               <span className="ml-3 text-[12px] text-[var(--muted)] font-mono">claude — salon privé</span>
               <span className="ml-auto text-[11px] px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent)]/25">
-                ● live
+                ● live preview
               </span>
             </div>
             <div className="grid md:grid-cols-[1fr_300px]">
@@ -119,7 +124,7 @@ export function LandingHero() {
               <div className="border-t md:border-t-0 md:border-l border-[var(--border)] p-5 bg-[var(--background-elev)]/50">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">Artifact · List.tsx</p>
                 <div className="mt-3 space-y-2">
-                  {["Maison header", "Curated list", "Gilded footer"].map((r) => (
+                  {["Streamed reply", "Code sidebar", "Copy & download"].map((r) => (
                     <div key={r} className="h-11 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent)]/20 grid place-items-center text-[12px] text-[var(--muted)]">
                       {r}
                     </div>
@@ -134,34 +139,15 @@ export function LandingHero() {
   );
 }
 
-export function LogoMarquee() {
-  const names = ["MAISON NOIR", "Atelier Cinq", "VELOURS", "Opéra Privé", "GILDED & CO", "Salon Sept"];
-  return (
-    <section className="py-10 border-y border-[var(--border)] overflow-hidden">
-      <p className="text-center text-[11px] uppercase tracking-[0.3em] text-[var(--muted)] mb-6">
-        Adored by discerning teams
-      </p>
-      <div className="flex gap-12 justify-center flex-wrap px-6">
-        {names.map((n) => (
-          <span key={n} className="font-display text-[19px] text-[var(--muted)] hover:text-[var(--foreground)] transition tracking-wide">
-            {n}
-          </span>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export function Bento() {
   const cards = [
-    { icon: Code2, title: "Artifacts, atelier-grade", body: "Code, documents and designs open beside the conversation — versioned, downloadable, exquisite.", span: "md:col-span-2" },
-    { icon: MemoryStick, title: "Mémoire", body: "Claude remembers your taste, your tone, your canon." },
-    { icon: Eye, title: "Vision", body: "Drop in a façade, a gown, a graph — Claude reads it like a critic." },
-    { icon: Layers, title: "Projects", body: "Wardrobes of knowledge, tailored per maison." },
-    { icon: Sparkles, title: "Opus reasoning", body: "Slow where it matters. Decisive where it counts.", span: "md:col-span-2" },
+    { icon: Zap, title: "Live streaming", body: "Replies stream token-by-token over SSE. Stop anytime; partial answers are kept, not lost.", span: "md:col-span-2" },
+    { icon: Database, title: "Your history, kept", body: "Sessions and messages persist in SQLite. Search, rename, and delete from the sidebar." },
+    { icon: Code2, title: "Artifacts sidebar", body: "Fenced code blocks open beside the chat with copy and download. HTML/SVG previews render live." },
+    { icon: Search, title: "Workspace craft", body: "Model switcher, voice dictation, file context, read-aloud, retry, and ⌘K command palette.", span: "md:col-span-2" },
   ];
   return (
-    <section id="atelier" className="max-w-[1200px] mx-auto px-4 md:px-6 py-24">
+    <section id="atelier" className="max-w-[1200px] mx-auto px-4 md:px-6 py-24 scroll-mt-24">
       <motion.p {...fade()} className="text-[11px] uppercase tracking-[0.3em] text-[var(--accent)]">L’atelier</motion.p>
       <motion.h2 {...fade(0.06)} className="font-display text-[34px] md:text-[56px] leading-tight mt-3 max-w-[700px]">
         Every detail, <span className="italic champagne-text">considered.</span>
@@ -181,58 +167,47 @@ export function Bento() {
   );
 }
 
-export function Pricing() {
-  const tiers = [
-    { name: "Flâneur", price: "Free", feats: ["Claude Sonnet access", "10 artifacts / mo", "Community salon"], cta: "Stroll in", hot: false },
-    { name: "Connoisseur", price: "$20", feats: ["Claude Opus 4.5 priority", "Unlimited artifacts", "Projects + mémoire", "Early atelier previews"], cta: "Join the salon", hot: true },
-    { name: "Maison", price: "Custom", feats: ["SSO & audit trails", "Private atelier cloud", "Dedicated couturier (CSM)"], cta: "Speak with us", hot: false },
+export function HowItWorks() {
+  const steps = [
+    { title: "1. Pick a model", body: "Choose from the Groq models in the top bar. The choice is sent with every request and remembered locally." },
+    { title: "2. Compose", body: "Type, dictate with the mic, or attach a text file for context. Enter sends, Shift+Enter adds a newline." },
+    { title: "3. Refine", body: "Retry a reply, read it aloud, copy it, or vote — feedback is saved on this device." },
   ];
   return (
-    <section id="tarifs" className="max-w-[1100px] mx-auto px-4 md:px-6 py-24">
-      <h2 className="font-display text-[34px] md:text-[52px] text-center">Choose your <span className="italic champagne-text">salon.</span></h2>
-      <div className="grid md:grid-cols-3 gap-5 mt-12">
-        {tiers.map((t, i) => (
-          <motion.div key={t.name} {...fade(i * 0.08)} className={`rounded-[26px] p-7 relative ${t.hot ? "luxe-card border !border-[var(--accent)]/50 scale-[1.03]" : "hairline bg-[var(--background-soft)]"}`}>
-            {t.hot && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-[0.2em] px-3 py-1 rounded-full btn-primary-luxe btn-luxe">
-                Most coveted
-              </span>
-            )}
-            <p className="font-display text-[22px]">{t.name}</p>
-            <p className="mt-2"><span className="font-display text-[40px]">{t.price}</span>{t.price.startsWith("$") && <span className="text-[var(--muted)] text-[13px]"> / month</span>}</p>
-            <ul className="mt-5 space-y-2.5 text-[13.5px] text-[var(--foreground-dim)]">
-              {t.feats.map((f) => (
-                <li key={f} className="flex gap-2"><Check size={15} className="text-[var(--accent)] mt-0.5 shrink-0" />{f}</li>
-              ))}
-            </ul>
-            <Link to="/chat" className="block mt-7">
-              <Button variant={t.hot ? "primary" : "outline"} size="md" className="w-full">{t.cta}</Button>
-            </Link>
-          </motion.div>
-        ))}
+    <section id="how" className="border-y border-[var(--border)] bg-[var(--background-soft)]/60 scroll-mt-24">
+      <div className="max-w-[1100px] mx-auto px-4 md:px-6 py-20">
+        <p className="text-[11px] uppercase tracking-[0.3em] text-[var(--accent)]">How it works</p>
+        <h2 className="font-display text-[30px] md:text-[44px] mt-3">Three steps to a good reply.</h2>
+        <div className="grid md:grid-cols-3 gap-5 mt-10">
+          {steps.map((s, i) => (
+            <motion.div key={s.title} {...fade(i * 0.07)} className="luxe-card rounded-3xl p-6">
+              <h3 className="font-display text-[19px]">{s.title}</h3>
+              <p className="text-[13.5px] text-[var(--muted)] mt-2 leading-relaxed">{s.body}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
-export function Testimonials() {
-  const quotes = [
-    { q: "It writes like my best editor and codes like my best engineer.", a: "Creative Director, Velours" },
-    { q: "The first AI that feels furnished. Every pixel earns its place.", a: "Founder, Opéra Privé" },
-    { q: "Artifacts replaced three tools in our maison.", a: "CTO, Gilded & Co" },
-  ];
+export function StorageNote() {
+  const points = ["SQLite file at DATABASE_URL", "Rename, search & delete included", "Share copies a link — nothing is public"];
   return (
-    <section className="border-y border-[var(--border)] bg-[var(--background-soft)]/60">
-      <div className="max-w-[1100px] mx-auto px-4 md:px-6 py-20 grid md:grid-cols-3 gap-6">
-        {quotes.map((t, i) => (
-          <motion.figure key={i} {...fade(i * 0.07)}>
-            <div className="flex gap-1 text-[var(--accent)] mb-4">
-              {Array.from({ length: 5 }).map((_, s) => (<Star key={s} size={13} fill="currentColor" />))}
-            </div>
-            <blockquote className="font-display text-[20px] leading-snug italic">“{t.q}”</blockquote>
-            <figcaption className="mt-4 text-[12px] uppercase tracking-[0.18em] text-[var(--muted)]">{t.a}</figcaption>
-          </motion.figure>
-        ))}
+    <section id="storage" className="max-w-[1100px] mx-auto px-4 md:px-6 py-20 scroll-mt-24">
+      <div className="luxe-card rounded-[26px] p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-8">
+        <div className="flex-1">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-[var(--accent)]">Storage</p>
+          <h2 className="font-display text-[28px] md:text-[38px] mt-2">Runs locally. <span className="italic champagne-text">Keeps locally.</span></h2>
+          <ul className="mt-5 space-y-2.5 text-[13.5px] text-[var(--foreground-dim)]">
+            {points.map((f) => (
+              <li key={f} className="flex gap-2"><Check size={15} className="text-[var(--accent)] mt-0.5 shrink-0" />{f}</li>
+            ))}
+          </ul>
+        </div>
+        <Link to="/chat" className="shrink-0">
+          <Button size="lg">Open your salon <ArrowRight size={16} /></Button>
+        </Link>
       </div>
     </section>
   );
@@ -251,8 +226,24 @@ export function FinalCTA() {
       </Link>
       <footer className="mt-20 pt-8 border-t border-[var(--border)] flex flex-col md:flex-row items-center justify-between gap-3 text-[12px] text-[var(--muted)]">
         <span className="font-display italic text-[15px] text-[var(--foreground-dim)]">Claude — maison d’IA</span>
-        <span>Crafted with restraint · Noir & Ivory editions</span>
+        <span>Self-hosted demo · Groq + SQLite · Noir & Ivory editions</span>
       </footer>
     </section>
   );
+}
+
+/**
+ * Deprecated stubs — kept so older imports don't break.
+ * The honest landing no longer renders fictional brands, quotes, or pricing.
+ */
+export function LogoMarquee() {
+  return null;
+}
+
+export function Pricing() {
+  return null;
+}
+
+export function Testimonials() {
+  return null;
 }

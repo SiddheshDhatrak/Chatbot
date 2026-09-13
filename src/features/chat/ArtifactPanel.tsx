@@ -4,6 +4,13 @@ import { X, Copy, Check, Download, Eye, Code2 } from "lucide-react";
 import { useState } from "react";
 import { useChatStore } from "@/store/useChatStore";
 
+function canPreview(language: string, code: string): boolean {
+  const lang = language.toLowerCase();
+  if (lang !== "html" && lang !== "xml" && lang !== "svg") return false;
+  const t = code.trim().slice(0, 2000).toLowerCase();
+  return t.includes("<html") || t.includes("<svg") || t.includes("<div") || t.includes("<!doctype");
+}
+
 export function ArtifactPanel() {
   const artifact = useChatStore((s) => s.artifact);
   const open = useChatStore((s) => s.artifactOpen);
@@ -54,7 +61,9 @@ export function ArtifactPanel() {
             <span className="text-[11px] px-2 py-1 rounded-full bg-[var(--accent-soft)] border border-[var(--accent)]/30 text-[var(--accent)] uppercase tracking-widest">
               {artifact.language}
             </span>
-            <span className="text-[12px] text-[var(--muted)]">v3 · tailored just now</span>
+            <span className="text-[12px] text-[var(--muted)]">
+              {artifact.code.split("\n").length} lines · {(new Blob([artifact.code]).size / 1024).toFixed(1)} KB
+            </span>
             <span className="flex-1" />
             <button
               onClick={async () => {
@@ -89,20 +98,20 @@ export function ArtifactPanel() {
               <pre className="text-[12.5px] leading-relaxed font-mono p-4 rounded-2xl overflow-x-auto border border-[var(--border)] bg-[var(--code-bg)] text-[var(--ivory-100,#f5f1e8)]">
                 <code>{artifact.code}</code>
               </pre>
+            ) : canPreview(artifact.language, artifact.code) ? (
+              <iframe
+                title={`Preview of ${artifact.title}`}
+                sandbox="allow-scripts"
+                srcDoc={artifact.code}
+                className="w-full h-full min-h-[420px] rounded-2xl border border-[var(--border)] bg-white"
+              />
             ) : (
               <div className="luxe-card rounded-2xl p-6 text-center">
-                <p className="font-display text-[22px] italic">Live preview</p>
+                <p className="font-display text-[22px] italic">No live preview</p>
                 <p className="text-[13px] text-[var(--muted)] mt-2 leading-relaxed">
-                  A rendered salon preview of <b>{artifact.title}</b> would atelier here —
-                  interactive, responsive, gilded.
+                  Live preview renders HTML and SVG artifacts. This one is{" "}
+                  <b>{artifact.language}</b> — copy or download it from the Code tab.
                 </p>
-                <div className="mt-5 space-y-2 text-left">
-                  {[ "Maison header", "Curated list", "Gilded footer" ].map((row) => (
-                    <div key={row} className="h-10 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent)]/20 grid place-items-center text-[12px] text-[var(--muted)]">
-                      {row}
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
           </div>

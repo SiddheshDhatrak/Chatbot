@@ -160,15 +160,12 @@ export function Sidebar() {
       <div className="p-3 border-t border-[var(--border)]">
         <div className="luxe-card rounded-2xl p-3 flex items-center gap-3">
           <div className="w-9 h-9 rounded-full grid place-items-center font-display text-[15px] text-[var(--accent-ink)] bg-gradient-to-br from-[var(--accent)] to-[var(--brand)]">
-            V
+            ✦
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium truncate">Valued Member</p>
-            <p className="text-[11px] text-[var(--muted)]">Claude Opus · Atelier plan</p>
+            <p className="text-[13px] font-medium truncate">Local workspace</p>
+            <p className="text-[11px] text-[var(--muted)]">SQLite-backed · stored on this machine</p>
           </div>
-          <span className="text-[10px] px-2 py-1 rounded-full bg-[var(--accent-soft)] border border-[var(--accent)]/30 text-[var(--accent)] uppercase tracking-widest">
-            Pro
-          </span>
         </div>
       </div>
     </motion.aside>

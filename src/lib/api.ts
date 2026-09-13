@@ -24,12 +24,13 @@ export async function* chatEvents(
   sessionId: string | null,
   message: string,
   signal: AbortSignal,
+  model?: string,
 ): AsyncGenerator<ChatEvent> {
   const res = await fetch("/api/chat", {
     method: "POST",
     signal,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId, message }),
+    body: JSON.stringify({ sessionId, message, ...(model ? { model } : {}) }),
   });
   if (!res.ok || !res.body) {
     let detail = "";
