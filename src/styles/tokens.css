@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --color-noir-950: #0a0908;
+  --color-noir-900: #121110;
+  --color-noir-800: #1a1918;
+  --color-noir-700: #262524;
+  --color-noir-600: #3a3836;
+
+  --color-ivory-50: #faf7f0;
+  --color-ivory-100: #f5f1e8;
+  --color-ivory-200: #e9e1d2;
+  --color-ivory-300: #d6c9ae;
+
+  --color-champagne-200: #f3e6c8;
+  --color-champagne-300: #e8d5b5;
+  --color-champagne-400: #d9b988;
+  --color-champagne-500: #c9a96a;
+  --color-champagne-600: #a98850;
+
+  --color-clay-400: #e08a6d;
+  --color-clay-500: #d97757;
+  --color-clay-600: #b95c3e;
+
+  --color-ink-900: #1a1815;
+  --color-ink-700: #3d3831;
+  --color-ink-500: #6f675c;
+  --color-ink-400: #8f867a;
+}
+
+/* ————— Noir Opulent (dark default) ————— */
+:root,
+:root[data-theme="noir"] {
+  --background: #0a0908;
+  --background-soft: #121110;
+  --background-elev: #1a1918;
+  --foreground: #f5f1e8;
+  --foreground-dim: #b8b0a1;
+  --muted: #8f867a;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --card: rgba(26, 25, 24, 0.72);
+  --accent: #c9a96a;
+  --accent-soft: rgba(201, 169, 106, 0.12);
+  --accent-ink: #0a0908;
+  --brand: #d97757;
+  --ring: rgba(201, 169, 106, 0.45);
+  --shadow-luxe: 0 24px 80px -24px rgba(0, 0, 0, 0.8);
+  --glass: rgba(18, 17, 16, 0.66);
+  --composer: rgba(26, 25, 24, 0.85);
+  --user-bubble: linear-gradient(135deg, #c9a96a 0%, #b08d55 100%);
+  --user-ink: #14100a;
+  --code-bg: #121110;
+  color-scheme: dark;
+}
+
+/* ————— Ivory Editorial (light) ————— */
+:root[data-theme="ivory"] {
+  --background: #faf7f0;
+  --background-soft: #f5f1e8;
+  --background-elev: #ffffff;
+  --foreground: #1a1815;
+  --foreground-dim: #3d3831;
+  --muted: #8f867a;
+  --border: rgba(26, 24, 21, 0.1);
+  --border-strong: rgba(26, 24, 21, 0.18);
+  --card: rgba(255, 255, 255, 0.78);
+  --accent: #8a6d3b;
+  --accent-soft: rgba(201, 169, 106, 0.22);
+  --accent-ink: #faf7f0;
+  --brand: #d97757;
+  --ring: rgba(217, 119, 87, 0.4);
+  --shadow-luxe: 0 24px 70px -28px rgba(90, 70, 40, 0.35);
+  --glass: rgba(250, 247, 240, 0.72);
+  --composer: rgba(255, 255, 255, 0.9);
+  --user-bubble: linear-gradient(135deg, #1a1815 0%, #3d3831 100%);
+  --user-ink: #faf7f0;
+  --code-bg: #1a1815;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-soft: var(--background-soft);
+  --color-background-elev: var(--background-elev);
+  --color-foreground: var(--foreground);
+  --color-foreground-dim: var(--foreground-dim);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-card: var(--card);
+  --color-accent: var(--accent);
+  --color-brand: var(--brand);
+}
