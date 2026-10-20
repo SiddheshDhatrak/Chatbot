@@ -151,7 +151,12 @@ export async function readPage(url: string): Promise<ToolResult<PageContent>> {
       return fail(`Not an HTML page (content-type: ${type.split(";")[0]})`);
     }
 
-    const html = await readCapped(res);
+    // Add separators at block/cell boundaries so tables and lists don't run
+    // together in the extracted text ("8192Max Output Tokens" -> "8192 | Max ...").
+    const html = (await readCapped(res))
+      .replace(/<\/(td|th)>/gi, " |$&")
+      .replace(/<br\b[^>]*>/gi, "$&\n")
+      .replace(/<\/(p|div|li|tr|h[1-6]|dt|dd|section|article|table|ul|ol|pre|blockquote)>/gi, "\n$&");
     // Scripts are NOT executed (jsdom default). VirtualConsole swallows CSS/parse noise.
     const dom = new JSDOM(html, { url: current, virtualConsole: new VirtualConsole() });
     const doc = dom.window.document;

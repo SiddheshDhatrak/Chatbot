@@ -8,14 +8,14 @@ export const SYSTEM_PROMPT =
   "Answer helpfully and concisely. Use Markdown formatting (headings, lists, tables) where it aids clarity. " +
   "Wrap code in fenced code blocks with a language tag.";
 
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+export const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const POLLINATIONS_URL = "https://text.pollinations.ai/openai";
 
-function defaultModel() {
+export function defaultModel() {
   return process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 }
 
-function providerError(provider: string, status: number, text: string) {
+export function providerError(provider: string, status: number, text: string) {
   let detail = text.slice(0, 240);
   try {
     const json = JSON.parse(text);
@@ -95,7 +95,7 @@ async function* groqStream(
 }
 
 /** Keyless fallback — OpenAI-compatible streaming, then plain-text GET. */
-async function* pollinationsStream(
+export async function* pollinationsStream(
   messages: ChatMsg[],
   signal?: AbortSignal,
 ): AsyncGenerator<string> {
