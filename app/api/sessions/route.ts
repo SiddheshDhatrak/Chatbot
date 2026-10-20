@@ -11,7 +11,7 @@ export async function GET() {
       title: true,
       updatedAt: true,
       createdAt: true,
-      _count: { select: { messages: true } },
+      _count: { select: { messages: true, runs: true } },
     },
   });
   return Response.json({
@@ -21,6 +21,7 @@ export async function GET() {
       updatedAt: new Date(s.updatedAt).getTime(),
       createdAt: new Date(s.createdAt).getTime(),
       messageCount: s._count.messages,
+      hasResearch: s._count.runs > 0, // NEXORA: show a research badge
     })),
   });
 }

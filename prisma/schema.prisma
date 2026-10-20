@@ -28,9 +28,13 @@ model Message {
   role      String   // "user" | "assistant"
   content   String
   createdAt DateTime @default(now())
+  /// Research answers link to the agent run that produced them.
+  runId     String?
   session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  run       Run?     @relation(fields: [runId], references: [id], onDelete: SetNull)
 
   @@index([sessionId, createdAt])
+  @@index([runId])
 }
 
 // ---------- NEXORA research agent ----------
@@ -50,10 +54,12 @@ model Run {
   usedFallback      Boolean   @default(false)
   finalAnswer       String?
   citationPrecision Float?
+  cancelled         Boolean   @default(false) // client disconnected or pressed Stop
   session           Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   steps             Step[]
   notes             Note[]
   sources           Source[]
+  messages          Message[]
 
   @@index([sessionId, startedAt])
 }

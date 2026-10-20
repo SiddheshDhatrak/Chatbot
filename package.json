@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "postinstall": "prisma skills sync || exit 0",
-    "try:agent": "tsx scripts/try-agent.ts"
+    "try:agent": "tsx scripts/try-agent.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
@@ -48,6 +49,7 @@
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.12"
   }
 }

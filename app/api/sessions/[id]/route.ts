@@ -23,6 +23,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
         id: m.id,
         role: m.role,
         text: m.content,
+        runId: m.runId, // NEXORA: research answers link to their trace (/api/runs/:id)
         createdAt: new Date(m.createdAt).getTime(),
       })),
     },

@@ -55,6 +55,7 @@ import {
 import {
   analyzeCitations,
   citationWarnings,
+  enforceSupport,
   normalizeCitations,
   withHarnessSources,
   type CitationReport,
@@ -97,6 +98,8 @@ export interface AgentMetrics {
   citationRepairs: number;
   citationPrecision: number | null;
   snippetOnlyCitations: number;
+  /** Cited claims whose numbers/names were found in the cited source, as a share of checked claims. */
+  supportRate: number | null;
   usedFallback: boolean;
 }
 
@@ -144,7 +147,17 @@ const NOTE_CHARS = 900;
 const SUMMARY_CHARS = 240;
 /** Longest pause for the provider's rate-limit window. */
 const MAX_PACE_MS = 60_000;
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Sleep that ends early when the run is cancelled. */
+const sleep = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve) => {
+    if (signal?.aborted) return resolve();
+    const t = setTimeout(resolve, ms);
+    signal?.addEventListener("abort", () => {
+      clearTimeout(t);
+      resolve();
+    }, { once: true });
+  });
+export const STOPPED_MESSAGE = "Research stopped before an answer was produced.";
 
 // ---------------------------------------------------------------------------
 // Source registry: gives every retrieved URL a stable citation number [n]
@@ -152,6 +165,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 interface Source extends SourceRef {
   wasRead: boolean;
+  /** What the agent saw from this source: full page text if read, else the search snippet. */
+  text?: string;
 }
 
 class SourceRegistry {
@@ -159,7 +174,7 @@ class SourceRegistry {
   private byUrl = new Map<string, Source>();
 
   /** Register a URL (or return its existing entry). Numbers start at 1. */
-  add(url: string, title?: string, read = false): Source {
+  add(url: string, title?: string, read = false, text?: string): Source {
     const key = normalizeUrl(url);
     let s = this.byUrl.get(key);
     if (!s) {
@@ -169,6 +184,8 @@ class SourceRegistry {
     }
     if (title && s.title === s.url) s.title = title;
     if (read) s.wasRead = true;
+    // Page text replaces a snippet; a snippet never replaces page text.
+    if (text && (read || !s.text)) s.text = text;
     return s;
   }
   /** Map a second URL (e.g. after a redirect) to the same source number. */
@@ -389,6 +406,7 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
       return { r: await callLLM(toolChoice), recovered: false };
     } catch (err) {
       const msg = errorText(err);
+      if (signal?.aborted) return { error: "cancelled", recovered: false };
       // Hard provider limits (e.g. OpenRouter daily quota): no retry, no fallback.
       if (err instanceof ProviderStopError) return { error: msg, recovered: false, stop: true };
       if (!/tool call validation failed|tool_use_failed|not in request\.tools/i.test(msg) || toolRecoveries >= 3)
@@ -470,7 +488,13 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
     const wait = paceMs();
     if (wait) {
       yield { type: "warning", message: `Pausing ${Math.ceil(wait / 1000)}s for Groq's tokens-per-minute limit.` };
-      await sleep(wait);
+      await sleep(wait, signal);
+    }
+    // Cancellation: stop before the next LLM call.
+    if (signal?.aborted) {
+      stoppedBy = "aborted";
+      loopExited = true;
+      break;
     }
 
     // ---------------------------------------------------------------------
@@ -480,6 +504,12 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
     if (call.recovered)
       yield { type: "warning", message: "Model called a tool that doesn't exist; reminded it of the real tools and retried." };
     if (!call.r) {
+      if (signal?.aborted) {
+        // The client went away mid-call: that is a cancel, not a provider failure.
+        stoppedBy = "aborted";
+        loopExited = true;
+        break;
+      }
       llmError = call.error ?? "LLM call failed";
       providerStop = !!call.stop;
       break;
@@ -506,6 +536,7 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
     let savedThisStep = false;
 
     for (const call of r.tool_calls as ToolCall[]) {
+      if (signal?.aborted) break; // Cancellation: stop before the next tool call.
       const name = call.function.name;
       const args = parseArgs(call.function.arguments);
       yield { type: "act", step, tool: name, args };
@@ -547,7 +578,7 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
         summary = `[summary] ${name} ${JSON.stringify(args)} failed: ${clip(res.error, 120)}`;
       } else if (name === "web_search") {
         const hits = res.data as SearchHit[];
-        const numbered = hits.map((h) => ({ source: registry.add(h.url, h.title).index, ...h }));
+        const numbered = hits.map((h) => ({ source: registry.add(h.url, h.title, false, h.snippet).index, ...h }));
         payload = numbered.map((h) => ({ ...h, snippet: clip(h.snippet, SNIPPET_CHARS) }));
         preview = hits.length
           ? `${hits.length} results: ${numbered.map((h) => `[${h.source}] ${clip(h.title, 50)}`).join(" | ")}`
@@ -557,7 +588,7 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
           (numbered.map((h) => `[source ${h.source}] ${clip(h.title, 50)} - ${h.url}`).join(" ; ") || "no results");
       } else if (name === "read_page") {
         const p = res.data as PageContent;
-        const src = registry.add(String(args.url ?? p.url), p.title, true);
+        const src = registry.add(String(args.url ?? p.url), p.title, true, p.text);
         if (p.url !== args.url) registry.alias(p.url, src);
         pagesRead.push({ index: src.index, url: p.url, title: p.title, text: p.text });
         readThisStep.push(src.index);
@@ -612,6 +643,12 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
     }
   }
 
+  if (signal?.aborted && stoppedBy !== "aborted") {
+    stoppedBy = "aborted";
+    loopExited = true;
+  }
+  if (stoppedBy === "aborted") yield { type: "warning", message: "Run cancelled by the client; stopping." };
+
   // Loop ran out of steps without the model choosing to answer.
   if (!loopExited && !llmError) {
     stoppedBy = "step_limit";
@@ -664,12 +701,13 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
     const wait = paceMs();
     if (wait) {
       yield { type: "warning", message: `Pausing ${Math.ceil(wait / 1000)}s for Groq's tokens-per-minute limit.` };
-      await sleep(wait);
+      await sleep(wait, signal);
     }
     const call = await callWithRecovery("none");
     if (call.recovered)
       yield { type: "warning", message: "Model tried to call a tool during the final answer; told it to answer in text and retried." };
     if (call.r) finalText = (call.r.message.content ?? "").trim();
+    else if (signal?.aborted) stoppedBy = "aborted";
     else {
       llmError = call.error ?? "LLM call failed";
       providerStop = !!call.stop;
@@ -724,13 +762,23 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
       const wait = paceMs();
       if (wait) {
         yield { type: "warning", message: `Pausing ${Math.ceil(wait / 1000)}s for Groq's tokens-per-minute limit.` };
-        await sleep(wait);
+        await sleep(wait, signal);
       }
       const call = await callWithRecovery("none");
       const repaired = (call.r?.message.content ?? "").trim();
-      if (repaired && analyzeCitations(normalizeCitations(repaired), registry, ctx.seenUrls).cited.length)
-        finalText = repaired;
-      else yield { type: "warning", message: "Citation repair failed; keeping the uncited answer." };
+      if (repaired && analyzeCitations(normalizeCitations(repaired), registry, ctx.seenUrls).cited.length) {
+        // Safety net: a repaired [n] survives only if the cited source really
+        // contains the claim's numbers and names. Otherwise: uncited + "(unverified)".
+        const enforced = enforceSupport(normalizeCitations(repaired), registry);
+        finalText = enforced.text;
+        if (enforced.rejected.length)
+          yield {
+            type: "warning",
+            message:
+              `Citation repair: rejected ${enforced.rejected.length} citation(s) whose source does not contain the claim; ` +
+              `those sentences are marked (unverified).`,
+          };
+      } else yield { type: "warning", message: "Citation repair failed; keeping the uncited answer." };
     }
   }
 
@@ -742,7 +790,7 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
   if (!finalText) {
     finalText =
       stoppedBy === "aborted"
-        ? "(stopped)"
+        ? STOPPED_MESSAGE
         : providerStop
           ? `⚠️ NEXORA stopped: ${llmError}`
           : "⚠️ NEXORA could not produce an answer. Please try again.";
@@ -757,7 +805,7 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
 
   const sources: SourceRef[] = report.valid.map((n) => {
     const s = registry.get(n)!;
-    return { index: s.index, url: s.url, title: s.title };
+    return { index: s.index, url: s.url, title: s.title, ...(report.unsupported.includes(n) ? { unsupported: true } : {}) };
   });
   // The harness, not the model, owns the Sources list.
   finalText = withHarnessSources(
@@ -789,6 +837,7 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
     citationRepairs,
     citationPrecision: report.precision,
     snippetOnlyCitations: report.snippetOnlyCount,
+    supportRate: report.supportRate,
     usedFallback,
   };
 
@@ -810,6 +859,7 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
         usedFallback,
         finalAnswer: finalText,
         citationPrecision: report.precision,
+        cancelled: stoppedBy === "aborted",
       },
     });
   } catch (err) {
