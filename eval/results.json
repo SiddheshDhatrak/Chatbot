@@ -1,0 +1,599 @@
+{
+  "meta": {
+    "model": "openai/gpt-oss-120b",
+    "sessionId": "cmvhn6nh40000l7icqiidkc76",
+    "createdAt": "2026-10-21T04:58:49.024Z",
+    "updatedAt": "2026-10-21T05:59:14.104Z"
+  },
+  "results": {
+    "q01_groq_founder": {
+      "id": "q01_groq_founder",
+      "category": "single_fact",
+      "question": "Who founded Groq and in what year was it founded?",
+      "groundTruth": [
+        "Jonathan Ross",
+        "2016"
+      ],
+      "nexora": {
+        "answer": "**Answer:** Groq was founded in **2016** by a group of former Google engineers, led by **Jonathan Ross** (the designer of Google’s Tensor Processing Unit) and **Douglas Wightman**, who served as the company’s first CEO[1].\n\n**Sources**\n\n[1] Groq - Wikipedia - https://en.wikipedia.org/wiki/Groq",
+        "runId": "cmvhn6nt00002l7icuyr7tajb",
+        "latencyMs": 52960,
+        "steps": 4,
+        "toolCalls": 3,
+        "tokens": 9371,
+        "status": "completed",
+        "stoppedBy": "answer",
+        "usedFallback": false,
+        "citationPrecision": 1,
+        "readRatio": 1,
+        "supportRate": 1,
+        "snippetOnlyCount": 0,
+        "warnings": [
+          "Reminded the model to save_note facts from [1].",
+          "Pausing 46s for Groq's tokens-per-minute limit."
+        ],
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "Jonathan Ross",
+            "2016"
+          ]
+        },
+        "finishedAt": "2026-10-21T04:59:42.078Z"
+      },
+      "baseline": {
+        "answer": "**Groq** was founded by **Jonathan Ross** in **2019**. \n\n- **Founder:** Jonathan Ross (formerly a senior engineer at Google’s TPU team)  \n- **Year founded:** 2019  \n\nGroq focuses on building high‑performance AI inference hardware and software.",
+        "latencyMs": 609,
+        "tokens": 206,
+        "correctness": {
+          "method": "contains",
+          "score": 0,
+          "correct": false,
+          "matched": [
+            "Jonathan Ross"
+          ]
+        },
+        "finishedAt": "2026-10-21T04:59:42.694Z"
+      }
+    },
+    "q02_gptoss_lab_hq": {
+      "id": "q02_gptoss_lab_hq",
+      "category": "multi_hop",
+      "question": "In which city is the headquarters of the organization that released the gpt-oss open-weight models?",
+      "groundTruth": [
+        "San Francisco"
+      ],
+      "nexora": {
+        "answer": "**Answer:** The organization that released the GPT‑OSS open‑weight models – OpenAI – is headquartered in **San Francisco, California, USA**.\n\n**Details**\n\n| Organization | Headquarters city | Source |\n|--------------|-------------------|--------|\n| OpenAI (publisher of the GPT‑OSS models) | San Francisco, California | [21] |\n\n**Sources**\n\n[21] OpenAI - https://en.wikipedia.org/wiki/OpenAI (snippet only)",
+        "runId": "cmvhn8a98000ql7icj79l33oh",
+        "latencyMs": 117333,
+        "steps": 7,
+        "toolCalls": 6,
+        "tokens": 18067,
+        "status": "completed",
+        "stoppedBy": "answer",
+        "usedFallback": false,
+        "citationPrecision": 1,
+        "readRatio": 0,
+        "supportRate": 1,
+        "snippetOnlyCount": 1,
+        "warnings": [
+          "Pausing 34s for Groq's tokens-per-minute limit.",
+          "Reminded the model to save_note facts from [6].",
+          "Pausing 43s for Groq's tokens-per-minute limit.",
+          "1 cited source(s) [21] are snippet-only (page never read with read_page). Claims that depend on them are unverified, and the answer does not mark them."
+        ],
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "San Francisco"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:02:02.604Z"
+      },
+      "baseline": {
+        "answer": "**Headquarters:** **San Francisco, California, USA**\n\nThe organization that released the **gpt‑oss** open‑weight models is **OpenAI**, whose corporate headquarters are located in San Francisco.",
+        "latencyMs": 3546,
+        "tokens": 326,
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "San Francisco"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:02:06.156Z"
+      }
+    },
+    "q03_gptoss_context_groq": {
+      "id": "q03_gptoss_context_groq",
+      "category": "time_sensitive",
+      "question": "What is the context window, in tokens, of GPT-OSS 120B on Groq according to Groq's documentation?",
+      "groundTruth": [
+        "131,072",
+        "131072",
+        "131k",
+        "128k"
+      ],
+      "nexora": {
+        "answer": "**Answer:**  \nAccording to Groq’s official documentation, the GPT‑OSS 120B model has a context window of **131,072 tokens**[12].\n\n**Sources**\n\n[12] OpenAI GPT-OSS 120B - GroqDocs - https://console.groq.com/docs/model/openai/gpt-oss-120b",
+        "runId": "cmvhnavkj001yl7icsv6t1vr4",
+        "latencyMs": 92512,
+        "steps": 5,
+        "toolCalls": 4,
+        "tokens": 13486,
+        "status": "completed",
+        "stoppedBy": "answer",
+        "usedFallback": false,
+        "citationPrecision": 1,
+        "readRatio": 1,
+        "supportRate": 1,
+        "snippetOnlyCount": 0,
+        "warnings": [
+          "Reminded the model to save_note facts from [12].",
+          "Pausing 50s for Groq's tokens-per-minute limit.",
+          "Pausing 29s for Groq's tokens-per-minute limit."
+        ],
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "131,072",
+            "131072"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:03:38.724Z"
+      },
+      "baseline": {
+        "answer": "**Answer**\n\nAccording to Groq’s official documentation, the **GPT‑OSS 120B** model hosted on Groq supports a **context window of 128 k tokens** (i.e., up to 131 072 tokens per request).  \n\n---  \n\n### Source\n\n| Document | Section / Heading | Quote |\n|----------|-------------------|-------|\n| Groq Model Catalog – *GPT‑OSS 120B* | “Context Length” | “The model can process up to **128 k tokens** in a single request.” |\n\n*(The information is taken from the Groq model catalog page for GPT‑OSS 120B, which lists the model’s specifications, including its maximum context length.)*  \n\n---  \n\n### Quick Reference\n\n| Model | Provider | Max Context (tokens) |\n|-------|----------|----------------------|\n| GPT‑OSS 120B | Groq | **128 k** (≈ 131 072) |\n\nFeel free to let me know if you need more details about usage limits, pricing, or how to query the model!",
+        "latencyMs": 1085,
+        "tokens": 419,
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "131,072",
+            "131072"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:03:39.813Z"
+      }
+    },
+    "q04_transformer_first_author": {
+      "id": "q04_transformer_first_author",
+      "category": "multi_hop",
+      "question": "The paper 'Attention Is All You Need' introduced the Transformer. Who is listed as its first author, and which company was that author working for when it was published?",
+      "groundTruth": [
+        "Ashish Vaswani",
+        "Google"
+      ],
+      "nexora": {
+        "answer": "**Answer**\n\n- **First author:** Ashish Vaswani [1]  \n- **Company at publication:** Google (the authors were Google researchers when the paper was released in 2017) [1]\n\n**Sources**\n\n[1] Attention Is All You Need - Wikipedia - https://en.wikipedia.org/wiki/Attention_Is_All_You_Need",
+        "runId": "cmvho0xe80001l7ac1mylenw4",
+        "latencyMs": 37507,
+        "steps": 4,
+        "toolCalls": 3,
+        "tokens": 10558,
+        "status": "completed",
+        "stoppedBy": "answer",
+        "usedFallback": false,
+        "citationPrecision": 1,
+        "readRatio": 1,
+        "supportRate": 1,
+        "snippetOnlyCount": 0,
+        "warnings": [
+          "Reminded the model to save_note facts from [1].",
+          "Pausing 31s for Groq's tokens-per-minute limit.",
+          "Answer had no [n] citations; asking the model once to add them (citation repair)."
+        ],
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "Ashish Vaswani",
+            "Google"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:22:58.712Z"
+      },
+      "baseline": {
+        "answer": "**First author:** **Ashish Vaswani**  \n\n**Affiliation at the time of publication (June 2017):** **Google Brain / Google Research** (Google).  \n\nThe paper *“Attention Is All You Need”* was released as a Google Research technical report (arXiv:1706.03762) and all of the listed authors, including Vaswani, were employees of Google when the work was published.",
+        "latencyMs": 831,
+        "tokens": 339,
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "Ashish Vaswani",
+            "Google"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:23:39.384Z"
+      }
+    },
+    "q05_transformer_venue_city": {
+      "id": "q05_transformer_venue_city",
+      "category": "multi_hop",
+      "question": "At which conference was 'Attention Is All You Need' presented, and in which city was that edition of the conference held?",
+      "groundTruth": [
+        "Long Beach"
+      ],
+      "nexora": {
+        "answer": "**Answer**  \nThe paper *“Attention Is All You Need”* was presented at the **NeurIPS 2017** conference  and that edition of NeurIPS was held in **Long Beach, California, USA**  (unverified).",
+        "runId": "cmvho2lfj000kl7aczul6719b",
+        "latencyMs": 138407,
+        "steps": 8,
+        "toolCalls": 7,
+        "tokens": 23794,
+        "status": "completed",
+        "stoppedBy": "answer",
+        "usedFallback": false,
+        "citationPrecision": null,
+        "readRatio": null,
+        "supportRate": null,
+        "snippetOnlyCount": 0,
+        "warnings": [
+          "Model called a tool that doesn't exist; reminded it of the real tools and retried.",
+          "Pausing 40s for Groq's tokens-per-minute limit.",
+          "Pausing 40s for Groq's tokens-per-minute limit.",
+          "Reminded the model to save_note facts from [19].",
+          "Pausing 39s for Groq's tokens-per-minute limit.",
+          "Answer had no [n] citations; asking the model once to add them (citation repair).",
+          "Citation repair: rejected 1 citation(s) whose source does not contain the claim; those sentences are marked (unverified).",
+          "Model's Sources list mislabels [19] (URL differs from what was retrieved). Rebuilt the list from retrieved sources.",
+          "Answer contains no inline [n] citations in its body; claims are unverified."
+        ],
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "Long Beach"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:25:57.845Z"
+      },
+      "baseline": {
+        "answer": "**Paper:** “Attention Is All You Need” (Vaswani et al., 2017)  \n\n**Conference:** *Neural Information Processing Systems* (NIPS 2017) – the 31st annual conference, now known as **NeurIPS**.  \n\n**Location of that edition:** **Long Beach, California, USA** (held December 4‑9 2017).  \n\n---  \n\n**Quick reference**\n\n| Item | Details |\n|------|---------|\n| **Conference name** | NIPS 2017 (Neural Information Processing Systems) |\n| **Edition** | 31st annual conference |\n| **City** | Long Beach, California, USA |\n| **Dates** | 4–9 December 2017 |\n| **Paper presentation** | Oral presentation (Track A, Session 1) |\n\nSo, “Attention Is All You Need” was first presented at the 2017 NIPS conference, which took place in Long Beach.",
+        "latencyMs": 1174,
+        "tokens": 387,
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "Long Beach"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:26:46.319Z"
+      }
+    },
+    "q06_lightbulb_inventor": {
+      "id": "q06_lightbulb_inventor",
+      "category": "conflicting_sources",
+      "question": "Who invented the incandescent light bulb?",
+      "groundTruth": [
+        "Edison",
+        "Swan"
+      ],
+      "nexora": {
+        "answer": "**Answer:**  \nThe incandescent light bulb was not invented by a single person; several inventors created early versions, but the first commercially practical and widely adopted bulb was developed by **Thomas Edison** in 1879‑1880 (unverified). Earlier contributors included **Frederick de Moleyns** (patented an incandescent lamp in 1841), **John W. Starr** (patented a lamp in 1845), and **Joseph Swan** (produced a practical lamp in 1880‑81 in Britain) (unverified). Edison’s design combined a high‑resistance carbon filament with a high‑vacuum bulb and an integrated lighting system, making it the first to be mass‑produced and widely used[1].  \n\n**Key points**\n\n| Inventor | Year / Patent | Contribution |\n|----------|---------------|--------------|\n| Frederick de Moleyns | 1841 | First patent for an incandescent lamp (carbon filament in a vacuum)[1] |\n| John W. Starr | 1845 | Patented an incandescent lamp using a carbon filament[1] |\n| Joseph Swan | 1880‑81 | Developed a practical incandescent lamp in the UK; installed lighting in homes (unverified) |\n| **Thomas Edison** | 1879‑1880 | Created the first commercially viable incandescent bulb with a durable filament and high‑vacuum bulb; launched large‑scale production and lighting systems[1] |\n\nThus, while Edison is most often credited with “inventing” the incandescent light bulb due to its commercial success, the technology built on earlier work by de Moleyns, Starr, and Swan.\n\n**Sources**\n\n[1] Incandescent light bulb - Wikipedia - https://en.wikipedia.org/wiki/Incandescent_light_bulb",
+        "runId": "cmvho6lo9001pl7acisgknndt",
+        "latencyMs": 50280,
+        "steps": 4,
+        "toolCalls": 3,
+        "tokens": 10969,
+        "status": "completed",
+        "stoppedBy": "answer",
+        "usedFallback": false,
+        "citationPrecision": 1,
+        "readRatio": 1,
+        "supportRate": null,
+        "snippetOnlyCount": 0,
+        "warnings": [
+          "Reminded the model to save_note facts from [1].",
+          "Answer had no [n] citations; asking the model once to add them (citation repair).",
+          "Pausing 38s for Groq's tokens-per-minute limit.",
+          "Citation repair: rejected 3 citation(s) whose source does not contain the claim; those sentences are marked (unverified)."
+        ],
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "Edison",
+            "Swan"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:27:36.689Z"
+      },
+      "baseline": {
+        "answer": "**Inventor of the incandescent light bulb**\n\n| Year | Inventor(s) | Contribution |\n|------|-------------|--------------|\n| 1800 | **Humphry Davy** (British) | Demonstrated the first electric light by passing current through a thin strip of platinum (the “electric arc”). |\n| 1840‑1850 | **Warren de la Rue** (British) | Used a coiled platinum filament in a vacuum tube; proved the concept but the material was too expensive for commercial use. |\n| 1854 | **Heinrich Göbel** (German‑American) | Patented a carbon‑filament bulb in the United States (U.S. Patent No. 6,014). |\n| 1874 | **Joseph Swan** (British) | Developed a practical carbon‑filament bulb and obtained a UK patent in 1878. |\n| 1879 | **Thomas Edison** (American) | Created a high‑resistance carbon‑filament bulb that could burn for many hours, filed U.S. Patent No. 223,898 (Oct 21 1879), and built the first commercial electric lighting system. |\n| 1880 | **Hiram Maxim** (American) | Improved filament durability and introduced a more reliable manufacturing process. |\n| 1883 | **Lewis Latimer** (American) | Patented an improved carbon‑filament manufacturing method that increased bulb lifespan. |\n\n### Bottom line\n- **Thomas Edison** is most often credited with inventing the practical, commercially viable incandescent light bulb because his 1879 design combined a long‑lasting carbon filament with a high‑vacuum glass envelope, enabling mass production and widespread adoption.\n- However, the invention was the result of incremental advances by many inventors (Davy, de la Rue, Swan, Göbel, Maxim, Latimer, etc.), each contributing key pieces of the technology.",
+        "latencyMs": 1096,
+        "tokens": 537,
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "Edison",
+            "Swan"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:27:37.793Z"
+      }
+    },
+    "q07_everest_height": {
+      "id": "q07_everest_height",
+      "category": "conflicting_sources",
+      "question": "What is the official height of Mount Everest in metres?",
+      "groundTruth": [
+        "8,848.86",
+        "8848.86",
+        "8,848",
+        "8848",
+        "8,849",
+        "8849"
+      ],
+      "nexora": {
+        "answer": "The most commonly cited official height of Mount Everest is **8,848.86 metres** (about 29,031.7 ft). This figure was announced by a joint survey conducted by Nepal and China in 2020.  Keep in mind that the height of a mountain can vary slightly depending on the measurement method and the datum used, so data may not be completely fixed.",
+        "runId": "cmvhpbmki0001l7z8x6wb1x7g",
+        "latencyMs": 34074,
+        "steps": 1,
+        "toolCalls": 1,
+        "tokens": 1038,
+        "status": "invalid_rate_limited",
+        "stoppedBy": "fallback",
+        "usedFallback": true,
+        "citationPrecision": null,
+        "readRatio": null,
+        "supportRate": null,
+        "snippetOnlyCount": 0,
+        "warnings": [
+          "Groq unavailable (Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): …). Falling back to a model without tools: this answer is UNCITED and not verified against web sources."
+        ],
+        "finishedAt": "2026-10-21T05:59:14.092Z",
+        "invalidReason": "Groq 429: {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199084, Requested 1584. Please try again in 4m48.576s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n"
+      },
+      "baseline": {
+        "answer": "**Official Height of Mount Everest**\n\n- **Height:** **8,848.86 metres** (29,031.7 feet)  \n- **Source:** Joint announcement by China and Nepal on 8 December 2020, based on the latest satellite‑based and ground surveys.  \n\nThis measurement supersedes the previous widely‑cited figure of 8,848 m (29,029 ft) that was established in 1955.",
+        "latencyMs": 725,
+        "tokens": 241,
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "8,848.86",
+            "8848.86",
+            "8,848",
+            "8848"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:29:08.140Z"
+      }
+    },
+    "q08_gptoss_input_price": {
+      "id": "q08_gptoss_input_price",
+      "category": "time_sensitive",
+      "question": "What is the current Groq API price per million input tokens for GPT-OSS 120B?",
+      "groundTruth": [
+        "0.15",
+        "$0.15"
+      ],
+      "nexora": {
+        "answer": "I’m sorry, but I don’t have up‑to‑date information on Groq’s current API pricing for GPT‑OSS 120B. The most reliable source would be Groq’s official pricing page or developer documentation, which can be found in their API reference manual. If you need the exact figure, I recommend checking that documentation or contacting Groq support directly.",
+        "runId": "cmvho9n3r002rl7acjy2iwpoa",
+        "latencyMs": 43220,
+        "steps": 1,
+        "toolCalls": 1,
+        "tokens": 1055,
+        "status": "invalid_rate_limited",
+        "stoppedBy": "fallback",
+        "usedFallback": true,
+        "citationPrecision": null,
+        "readRatio": null,
+        "supportRate": null,
+        "snippetOnlyCount": 0,
+        "warnings": [
+          "Groq unavailable (Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): …). Falling back to a model without tools: this answer is UNCITED and not verified against web sources."
+        ],
+        "finishedAt": "2026-10-21T05:29:51.465Z",
+        "invalidReason": "Groq unavailable (Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): …). Falling back to a model without tools: this answer is UNCITED and not verified against web sources."
+      },
+      "baseline": {
+        "answer": "**Groq API – Pricing for GPT‑OSS 120B (as of the latest public pricing sheet)**  \n\n| Item | Price (USD) |\n|------|-------------|\n| **Input tokens** | **$0.30 per million tokens** |\n| Output tokens | $0.60 per million tokens* |\n\n\\*Groq’s public pricing page lists the output‑token cost for GPT‑OSS 120B at **$0.60 per million tokens**. The input‑token rate is the figure you asked for: **$0.30 per million input tokens**.\n\n> **Note:**  \n> - Prices are subject to change; always verify the current rates on Groq’s official pricing page or in your account dashboard.  \n> - The above rates apply to the **pay‑as‑you‑go** tier. Enterprise contracts or volume discounts may have different pricing.  \n\n**Reference:** Groq “Pricing” documentation (accessed Oct 2026).",
+        "latencyMs": 810,
+        "tokens": 391,
+        "correctness": {
+          "method": "contains",
+          "score": 0,
+          "correct": false,
+          "matched": []
+        },
+        "finishedAt": "2026-10-21T05:29:52.281Z"
+      }
+    },
+    "q09_openai_ceo": {
+      "id": "q09_openai_ceo",
+      "category": "time_sensitive",
+      "question": "Who is the current CEO of OpenAI?",
+      "groundTruth": [
+        "Sam Altman",
+        "Altman"
+      ],
+      "nexora": {
+        "answer": "As of my latest general‑knowledge update (pre‑2024), the CEO of OpenAI is Sam Altman. I don’t have access to real‑time data, so I can’t confirm that this is still the case as of today.  (If this information has changed, I would be unaware of it.)",
+        "runId": "cmvhoal5v0039l7acry64wo8n",
+        "latencyMs": 38295,
+        "steps": 0,
+        "toolCalls": 0,
+        "tokens": null,
+        "status": "invalid_rate_limited",
+        "stoppedBy": "fallback",
+        "usedFallback": true,
+        "citationPrecision": null,
+        "readRatio": null,
+        "supportRate": null,
+        "snippetOnlyCount": 0,
+        "warnings": [
+          "Groq unavailable (Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): …). Falling back to a model without tools: this answer is UNCITED and not verified against web sources."
+        ],
+        "finishedAt": "2026-10-21T05:30:30.660Z",
+        "invalidReason": "Groq unavailable (Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): …). Falling back to a model without tools: this answer is UNCITED and not verified against web sources."
+      },
+      "baseline": {
+        "answer": "**Current CEO of OpenAI (as of October 2026):** **Sam Altman**  \n\nSam Altman has served as the chief executive officer of OpenAI since the organization’s early days and continues in that role through 2026.",
+        "latencyMs": 30657,
+        "tokens": 211,
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "Sam Altman",
+            "Altman"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:31:01.325Z"
+      }
+    },
+    "q10_transformer_year": {
+      "id": "q10_transformer_year",
+      "category": "single_fact",
+      "question": "In what year was the paper 'Attention Is All You Need' published?",
+      "groundTruth": [
+        "2017"
+      ],
+      "nexora": {
+        "answer": "The paper “Attention Is All You Need” was published in **2017** (unverified).",
+        "runId": "cmvhoc2fs003fl7acxyc9neux",
+        "latencyMs": 41981,
+        "steps": 0,
+        "toolCalls": 0,
+        "tokens": null,
+        "status": "invalid_rate_limited",
+        "stoppedBy": "fallback",
+        "usedFallback": true,
+        "citationPrecision": null,
+        "readRatio": null,
+        "supportRate": null,
+        "snippetOnlyCount": 0,
+        "warnings": [
+          "Groq unavailable (Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): …). Falling back to a model without tools: this answer is UNCITED and not verified against web sources."
+        ],
+        "finishedAt": "2026-10-21T05:31:43.394Z",
+        "invalidReason": "Groq unavailable (Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): …). Falling back to a model without tools: this answer is UNCITED and not verified against web sources."
+      },
+      "baseline": {
+        "answer": "**Answer:** The paper *“Attention Is All You Need”* was published in **2017**.\n\nIt appeared as a conference paper at **NeurIPS 2017** (the 31st Conference on Neural Information Processing Systems).",
+        "latencyMs": 816,
+        "tokens": 206,
+        "correctness": {
+          "method": "contains",
+          "score": 1,
+          "correct": true,
+          "matched": [
+            "2017"
+          ]
+        },
+        "finishedAt": "2026-10-21T05:31:44.215Z"
+      }
+    },
+    "q11_gptoss_120b_vs_20b": {
+      "id": "q11_gptoss_120b_vs_20b",
+      "category": "comprehensive_synthesis",
+      "question": "Compare the context window and pricing of GPT-OSS 120B and GPT-OSS 20B on Groq.",
+      "groundTruth": [
+        [
+          "131,072",
+          "131K"
+        ],
+        "$0.15",
+        "$0.60",
+        "$0.075",
+        "$0.30"
+      ],
+      "nexora": {
+        "answer": "I’m not able to confirm the exact figures for the context window or pricing for GPT‑OSS 120B and GPT‑OSS 20B on Groq. As of my latest knowledge, Groq’s publicly‑available documentation does not detail price tiers or token limits for these specific GPT‑OSS model sizes. The context window is often tied to the model’s architecture (e.g., GPT‑OSS 120B might support a longer context slot than GPT‑OSS 20B), but without official Groq specs I can’t provide precise numbers. If you need up‑to‑date, authoritative details, I’d recommend checking Groq’s official resources or contacting their sales support directly.",
+        "runId": "cmvhoczj6003ll7aca5bg8xfx",
+        "latencyMs": 38348,
+        "steps": 0,
+        "toolCalls": 0,
+        "tokens": null,
+        "status": "invalid_rate_limited",
+        "stoppedBy": "fallback",
+        "usedFallback": true,
+        "citationPrecision": null,
+        "readRatio": null,
+        "supportRate": null,
+        "snippetOnlyCount": 0,
+        "warnings": [
+          "Groq unavailable (Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): …). Falling back to a model without tools: this answer is UNCITED and not verified against web sources."
+        ],
+        "finishedAt": "2026-10-21T05:32:22.662Z",
+        "invalidReason": "Groq unavailable (Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): …). Falling back to a model without tools: this answer is UNCITED and not verified against web sources."
+      },
+      "baseline": {
+        "answer": "",
+        "latencyMs": 30203,
+        "tokens": null,
+        "correctness": {
+          "method": "contains",
+          "score": 0,
+          "correct": false,
+          "matched": []
+        },
+        "error": "Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199780, Requested 395. Please try again in 1m15.6s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+        "finishedAt": "2026-10-21T05:32:52.872Z"
+      }
+    },
+    "q12_rag_overview": {
+      "id": "q12_rag_overview",
+      "category": "comprehensive_synthesis",
+      "question": "Explain how retrieval-augmented generation (RAG) works, and summarize its main benefits and limitations.",
+      "groundTruth": "Retrieval-augmented generation retrieves relevant documents from an external knowledge source, usually with a retriever over a vector index of embeddings, and adds them to the prompt so a language model generates an answer grounded in that retrieved context. It was introduced by Lewis et al. in 2020. Benefits: more factual and up-to-date answers without retraining, fewer hallucinations, the ability to cite sources, and use of private or domain-specific data. Limitations: answer quality depends on retrieval quality, irrelevant or conflicting passages can mislead the model, context window limits, added latency and cost, and the model can still hallucinate or ignore the retrieved text.",
+      "nexora": {
+        "answer": "**Retrieval‑Augmented Generation (RAG)** is a family of language‑modeling techniques that combine a *retrieval* step with a *generation* step. The idea is to let a model look up relevant information in an external knowledge source (typically a large document collection) and then produce an answer that is grounded in that retrieved content.\n\n---\n\n## 1. How RAG works\n\n| Step | What happens | Typical components |\n|------|--------------|--------------------|\n| **1. Query/Prompt** | The user’s input (question, instruction, etc.) is fed into the system. | Plain text encoder (e.g., a BERT‑style encoder) |\n| **2. Retrieval** | The system searches an indexed document collection to find the most relevant passages. Two common retrieval flavors: | - **Sparse** (TF‑IDF/BM25) <br>- **Dense** (deep‑semantic retrieval, e.g., DPR, CLIP‑style embeddings) |\n| | The retrieved documents (or their embeddings) are supplied to the next stage. | Retrieval ranker (possibly learnable) |\n| **3. Fusion/Encoding** | The retrieved texts are combined with the original query and fed into a generative model. Different fusion strategies exist:<br>• *Concat*: simply prepend/append the retrieved passages to the prompt.<br>• *Cross‑attention*: the decoder attends over the encoder outputs of the retrieved passages.<br>• *Hybrid*: mixture‑of‑experts where each retrieved snippet runs an encoder and the decoder picks the best. | Encoder‑decoder model (e.g., T5, BART) |\n| **4. Generation** | The decoder outputs the final text, ideally conditioned on the retrieved content. | Language model fine‑tuned on retrieval‑augmented data |\n| **5. Optional post‑filter** | Some pipelines post‑process the raw output, e.g., verifying facts or formatting the answer. | Rule‑based or lightweight neural modules |\n\n### End‑to‑end training\n\nIn *train‑able* RAG systems the retrieval component is jointly trained with the generator. The objective (e.g., maximum likelihood over the answer) backs‑propagates through the retrieval module, encouraging it to surface passages that help the generator produce correct responses. This is sometimes called *differentiable retrieval* or *trainable information retrieval*.\n\n---\n\n## 2. Main Benefits\n\n| Benefit | What it gives you |\n|---------|-------------------|\n| **Increased factuality** | By grounding text in actual documents, hallucinations (invented facts) are reduced. |\n| **Up‑to‑date knowledge** | The external corpus can be refreshed without re‑training the generator from scratch. |\n| **Reduced training data needs** | The generator can learn patterns from fewer labeled examples because it can look up long‑term knowledge. |\n| **Modularity** | Retrieval and generation can be optimized separately or swapped (e.g., replace a dense retriever with a new one). |\n| **Explainability** | The system can expose which passages influenced an answer, aiding transparency and debugging. |\n| **Scalability** | Knowledge can be expanded by adding new documents rather than expanding the model size. |\n\n---\n\n## 3. Main Limitations\n\n| Limitation | Why it hurts performance |\n|------------|--------------------------|\n| **Retrieval errors** | If the top‑k passages miss critical facts, the generator may still hallucinate or provide wrong answers. |\n| **Coverage gaps** | The model can only answer what the corpus contains; rare or niche knowledge may be missing. |\n| **Inference cost** | Searching a large index, encoding retrieved passages, and running a large decoder inflate latency and compute. |\n| **Complexity of training** | Jointly training retrieval and generation is non‑trivial and may require careful hyper‑parameter tuning. |\n| **Privacy/security** | Retrieved passages may inadvertently expose sensitive or copyrighted text if the corpus isn’t curated. |\n| **Dependence on index quality** | Poor indexing (shallow embeddings, incorrect tokenization) directly degrades retrieval quality. |\n| **Mode collapse** | The generator may overly rely on a few retrieved snippets, reducing diversity and robustness. |\n| **Limited multimodule integration** | Combining RAG with other modalities (images, code) can be challenging. |\n\n---\n\n### Quick Takeaway\n\n- **RAG** lets a language model “look up” documents to answer questions.  \n- It improves factual accuracy, allows timely knowledge updates, and raises fewer data‑effort requirements.  \n- However, its effectiveness hinges on a good index, careful joint training, and managing extra computational demands.  \n\n**Note**: This overview is a synthesis of widely circulated ideas in the NLP community. Specific implementation details can vary by framework and application; certain claims (e.g., particular quantitative gains) are unverified here.",
+        "runId": "cmvhoegr0003rl7ac9tugzbbk",
+        "latencyMs": 57024,
+        "steps": 0,
+        "toolCalls": 0,
+        "tokens": null,
+        "status": "invalid_rate_limited",
+        "stoppedBy": "fallback",
+        "usedFallback": true,
+        "citationPrecision": null,
+        "readRatio": null,
+        "supportRate": null,
+        "snippetOnlyCount": 0,
+        "warnings": [
+          "Groq unavailable (Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): …). Falling back to a model without tools: this answer is UNCITED and not verified against web sources."
+        ],
+        "finishedAt": "2026-10-21T05:33:49.979Z",
+        "invalidReason": "Groq unavailable (Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): …). Falling back to a model without tools: this answer is UNCITED and not verified against web sources."
+      },
+      "baseline": {
+        "answer": "",
+        "latencyMs": 17487,
+        "tokens": null,
+        "correctness": {
+          "method": "f1",
+          "score": 0,
+          "correct": false
+        },
+        "error": "Groq 429: Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199607, Requested 582. Please try again in 1m21.648s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+        "finishedAt": "2026-10-21T05:34:07.473Z"
+      }
+    }
+  }
+}

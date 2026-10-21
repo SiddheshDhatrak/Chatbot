@@ -1,13 +1,16 @@
-# Nexora — Maison d'IA
+# NEXORA — Autonomous Research & Evidence Agent
 
-A self-hosted AI chat salon. Pick a Groq model, stream replies live, and keep every conversation in your own SQLite database. No accounts, no tiers.
+NEXORA answers questions by researching them: a ReAct agent searches the web (Tavily), reads the pages, saves the key facts as notes, and writes an answer where every claim cites `[n]` and is checked against the page it came from. Normal chat is still available; Research mode is a toggle in the composer.
 
-Built with Next.js (App Router) + a Vite + React client, Prisma + SQLite persistence, and Groq streaming with a Pollinations fallback.
+PICT Pune, Dept. of IT, Group TY_10-9 · AIML CIE-1 project. Independent student project, not affiliated with any AI model provider.
+
+Built with Next.js (App Router) + a Vite + React client, Prisma + SQLite persistence, and Groq (tool calling + streaming) with a Pollinations fallback.
 
 ## Features
 
+- **Research mode (NEXORA agent)** — multi-step web research (web_search → read_page → save_note), live Reason / Act / Observe trace, citation tracking with a support check, persistent research notes, and guardrails (step limit, token budget, untrusted web data, citation checks). Traces and reports are saved and reopen from history.
 - **Live streaming chat** — token-by-token Groq replies with stop, retry / regenerate
-- **Model switcher** — GPT-OSS 120B (default), Llama 3.3 70B, Llama 3.1 8B; choice persists locally and is sent with every request
+- **Model switcher** — GPT-OSS 120B (default) and GPT-OSS 20B: the models available on the configured Groq key; choice persists locally and is sent with every request
 - **Persistent history** — SQLite-backed sessions with search, rename, delete
 - **Artifacts panel** — fenced code blocks open side-by-side with copy, download, and live HTML/SVG preview
 - **Rich messages** — Markdown + GFM + syntax highlighting, read-aloud (TTS), copy, share-link
@@ -55,7 +58,7 @@ Optional Vite client (uses the Next API on :3001):
 npm run dev        # Vite on http://localhost:3000
 ```
 
-Open `http://localhost:3001` → **Enter the salon** → `/chat`.
+Open `http://localhost:3001` → **Start researching** → `/chat`.
 
 ## Scripts
 

@@ -2,7 +2,7 @@ import "@/lib/storageKeys"; // renames old "claude-*" storage keys before persis
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Theme } from "@/lib/theme";
-import { getModel, setStoredModel } from "@/lib/models";
+import { getModel, isSelectableModel, setStoredModel } from "@/lib/models";
 import {
   chatEvents,
   listSessions,
@@ -55,6 +55,9 @@ interface ChatState {
   abortFlag: boolean;
   /** NEXORA: send messages to the research agent instead of plain chat. */
   researchMode: boolean;
+  /** Text to load into the composer (empty-state examples); nonce makes repeats fire. */
+  composerDraft: { text: string; nonce: number } | null;
+  fillComposer: (text: string) => void;
 
   setResearchMode: (v: boolean) => void;
   setTheme: (t: Theme) => void;
@@ -108,6 +111,8 @@ export const useChatStore = create<ChatState>()(
       model: typeof window !== "undefined" ? getModel() : "openai/gpt-oss-120b",
       abortFlag: false,
       researchMode: false,
+      composerDraft: null,
+      fillComposer: (text) => set({ composerDraft: { text, nonce: Date.now() } }),
 
       setResearchMode: (v) => set({ researchMode: v }),
       setTheme: (t) => set({ theme: t }),
@@ -541,6 +546,11 @@ export const useChatStore = create<ChatState>()(
       name: "nexora-store-v2",
       partialize: (s) =>
         ({ theme: s.theme, sidebarOpen: s.sidebarOpen, model: s.model, researchMode: s.researchMode }) as ChatState,
+      // A model saved earlier may no longer be offered (e.g. Llama on this key): fall back to the default.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<ChatState>;
+        return { ...current, ...p, model: isSelectableModel(p.model) ? p.model! : current.model };
+      },
     },
   ),
 );

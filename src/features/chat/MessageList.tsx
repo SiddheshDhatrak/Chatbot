@@ -123,7 +123,7 @@ function AssistantRow({ message }: { message: Message }) {
       <StarMark size={30} className="mt-1 shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-1.5">
-          {isResearch ? "Nexora · Research" : "Nexora"}
+          {isResearch ? "NEXORA · Research" : "NEXORA"}
         </p>
         {isResearch ? (
           // Live answers carry `research`; reloaded ones only a runId (loaded lazily).

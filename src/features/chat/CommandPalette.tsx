@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Command } from "cmdk";
 import { useNavigate } from "react-router-dom";
-import { MessageSquarePlus, SunMedium, Home, Search } from "lucide-react";
+import { MessageSquarePlus, SunMedium, Home, Search, Telescope } from "lucide-react";
 import { useChatStore } from "@/store/useChatStore";
 import { toggleTheme } from "@/lib/theme";
 
@@ -11,6 +11,8 @@ export function CommandPalette() {
   const newChat = useChatStore((s) => s.newChat);
   const sessions = useChatStore((s) => s.sessions);
   const selectChat = useChatStore((s) => s.selectChat);
+  const researchMode = useChatStore((s) => s.researchMode);
+  const setResearchMode = useChatStore((s) => s.setResearchMode);
 
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
@@ -51,7 +53,7 @@ export function CommandPalette() {
         </div>
         <Command.List className="max-h-[340px] overflow-auto p-2">
           <Command.Empty className="p-6 text-center text-[13px] text-[var(--muted)] font-display italic text-[16px]">
-            Nothing gilded found.
+            No matching commands or conversations.
           </Command.Empty>
           <Command.Group heading="Actions" className="text-[11px] uppercase tracking-widest text-[var(--muted)] px-2 py-1">
             <Item
@@ -64,8 +66,16 @@ export function CommandPalette() {
               }}
             />
             <Item
+              icon={<Telescope size={14} />}
+              label={`Toggle Research Mode (now ${researchMode ? "on" : "off"})`}
+              onSelect={() => {
+                setResearchMode(!researchMode);
+                setOpen(false);
+              }}
+            />
+            <Item
               icon={<Home size={14} />}
-              label="Go to Maison (landing)"
+              label="Go to landing page"
               onSelect={() => {
                 setOpen(false);
                 navigate("/");
@@ -98,7 +108,7 @@ export function CommandPalette() {
         <div className="flex items-center gap-3 px-4 py-2.5 border-t border-[var(--border)] text-[11px] text-[var(--muted)]">
           <span><kbd className="px-1 rounded hairline">↑↓</kbd> navigate</span>
           <span><kbd className="px-1 rounded hairline">↵</kbd> select</span>
-          <span className="ml-auto font-display italic">maison d’IA</span>
+          <span className="ml-auto tracking-wide">NEXORA · Research &amp; Evidence Agent</span>
         </div>
       </Command>
     </div>

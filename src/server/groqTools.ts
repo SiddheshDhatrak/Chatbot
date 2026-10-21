@@ -46,11 +46,27 @@ function parseDurationMs(s: string | null): number {
   return Number(m[1] ?? 0) * 60_000 + Number(m[2] ?? 0) * 1000 + Number(m[3] ?? 0);
 }
 
+/** Last Groq tokens-per-minute state seen by this process (any call). */
+let lastRateLimit: { info: RateLimitInfo; at: number } | null = null;
+
 function readRateLimit(res: Response): RateLimitInfo | undefined {
   const remaining = Number(res.headers.get("x-ratelimit-remaining-tokens"));
   const resetMs = parseDurationMs(res.headers.get("x-ratelimit-reset-tokens"));
   if (!Number.isFinite(remaining) || !Number.isFinite(resetMs)) return undefined;
-  return { remainingTokens: remaining, resetMs };
+  const info = { remainingTokens: remaining, resetMs };
+  lastRateLimit = { info, at: Date.now() };
+  return info;
+}
+
+/**
+ * How long to wait before a new Groq request of about `minTokens` fits in the
+ * tokens-per-minute window (0 if it fits or nothing is known). Used by batch
+ * jobs such as the evaluation runner, so back-to-back runs don't hit 429s.
+ */
+export function groqTokenWaitMs(minTokens = 6000): number {
+  if (!lastRateLimit || lastRateLimit.info.remainingTokens >= minTokens) return 0;
+  const left = lastRateLimit.info.resetMs - (Date.now() - lastRateLimit.at);
+  return left > 0 ? left + 500 : 0;
 }
 
 export interface GroqToolsOptions {
@@ -126,11 +142,67 @@ const MAX_WAIT_MS = 30_000;
  * retry-after header or as "Please try again in 8.5s" in the body.
  */
 function retryDelayMs(res: Response, body: string): number {
+  const ms = retryAfterMs(res, body);
+  if (ms == null) return 1500;
+  return Math.min(ms + 500, MAX_WAIT_MS);
+}
+
+/** Full (uncapped) retry-after from the header or "try again in 1h2m3.5s" in the body. */
+function retryAfterMs(res: Response, body: string): number | null {
   let secs = Number(res.headers.get("retry-after"));
-  const m = body.match(/try again in (?:(\d+)m)?([\d.]+)s/i);
-  if (m) secs = Number(m[1] ?? 0) * 60 + Number(m[2]);
-  if (!Number.isFinite(secs) || secs <= 0) return 1500;
-  return Math.min(secs * 1000 + 500, MAX_WAIT_MS);
+  const m = body.match(/try again in (?:(\d+)h)?(?:(\d+)m(?!s))?(?:([\d.]+)s)?/i);
+  if (m && (m[1] || m[2] || m[3])) secs = Number(m[1] ?? 0) * 3600 + Number(m[2] ?? 0) * 60 + Number(m[3] ?? 0);
+  return Number.isFinite(secs) && secs > 0 ? secs * 1000 : null;
+}
+
+/** Last failed provider response seen by this process (full text, not truncated). */
+export interface ProviderFailure {
+  provider: "Groq" | "OpenRouter";
+  status: number;
+  body: string;
+  /** How long the provider says to wait, if it said (uncapped). */
+  retryAfterMs: number | null;
+  /** retry-after and x-ratelimit-* response headers, verbatim. */
+  headers: Record<string, string>;
+  /** 1 = first try, 2 = the single retry. */
+  attempt: number;
+  at: number;
+}
+let lastFailure: ProviderFailure | null = null;
+const failureListeners = new Set<(f: ProviderFailure) => void>();
+
+/** For batch jobs (the evaluation runner): the most recent provider error, untruncated. */
+export function lastProviderFailure(): ProviderFailure | null {
+  return lastFailure;
+}
+
+/**
+ * Subscribe to every failed provider response (including ones that are
+ * retried internally). Returns an unsubscribe function. Listener errors are
+ * swallowed so logging can never break a request.
+ */
+export function onProviderFailure(listener: (f: ProviderFailure) => void): () => void {
+  failureListeners.add(listener);
+  return () => failureListeners.delete(listener);
+}
+
+function rateLimitHeaders(res: Response): Record<string, string> {
+  const out: Record<string, string> = {};
+  res.headers.forEach((value, key) => {
+    if (key === "retry-after" || key.startsWith("x-ratelimit-")) out[key] = value;
+  });
+  return out;
+}
+
+function recordFailure(f: ProviderFailure) {
+  lastFailure = f;
+  for (const l of failureListeners) {
+    try {
+      l(f);
+    } catch {
+      /* logging must not affect the request */
+    }
+  }
 }
 
 /** Reasoning models accept reasoning_effort; others (llama) may reject it. */
@@ -243,6 +315,15 @@ export async function callGroqWithTools(
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
+      recordFailure({
+        provider,
+        status: res.status,
+        body: text,
+        retryAfterMs: retryAfterMs(res, text),
+        headers: rateLimitHeaders(res),
+        attempt: attempt + 1,
+        at: Date.now(),
+      });
       if (viaOpenRouter) {
         if (isDailyLimit(res.status, text))
           throw new ProviderStopError(

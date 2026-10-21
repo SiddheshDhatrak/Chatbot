@@ -1,5 +1,7 @@
 "use client";
-import { memo, useRef, useState, useEffect } from "react";
+import { memo, useRef, useState, useEffect, useSyncExternalStore } from "react";
+
+const noopSubscribe = () => () => {};
 import { ArrowUp, Square, Plus, Mic, MicOff, X, FileText, Telescope } from "lucide-react";
 import { useChatStore } from "@/store/useChatStore";
 import { modelLabel } from "@/lib/models";
@@ -48,6 +50,23 @@ export const Composer = memo(function Composer({ onSend }: { onSend: (t: string)
     () => () => {
       voiceRef.current?.stop();
     },
+    [],
+  );
+
+  // Empty-state examples ask the store to load a question into the composer.
+  useEffect(
+    () =>
+      useChatStore.subscribe((s, prev) => {
+        if (s.composerDraft && s.composerDraft !== prev.composerDraft) {
+          setValue(s.composerDraft.text);
+          requestAnimationFrame(() => {
+            const ta = taRef.current;
+            if (!ta) return;
+            ta.focus();
+            ta.setSelectionRange(ta.value.length, ta.value.length);
+          });
+        }
+      }),
     [],
   );
 
@@ -116,7 +135,8 @@ export const Composer = memo(function Composer({ onSend }: { onSend: (t: string)
   };
 
   const canSend = (value.trim().length > 0 || files.length > 0) && !isTyping;
-  const voiceSupported = hasVoiceInput();
+  // Server has no Speech API: report "unsupported" on the server and during hydration, then the real value.
+  const voiceSupported = useSyncExternalStore(noopSubscribe, hasVoiceInput, () => false);
 
   return (
     <div className="sticky bottom-0 px-4 md:px-6 pb-5 pt-3 bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent">
@@ -165,7 +185,7 @@ export const Composer = memo(function Composer({ onSend }: { onSend: (t: string)
             placeholder={
               researchMode
                 ? "Ask a research question — NEXORA will search, read and cite…"
-                : "Message Nexora — ask for anything, beautifully…"
+                : "Ask NEXORA a question — turn on Research for web-checked, cited answers…"
             }
             className="w-full bg-transparent resize-none outline-none text-[14.5px] leading-relaxed placeholder:text-[var(--muted)] max-h-[180px] py-2"
           />
@@ -207,15 +227,25 @@ export const Composer = memo(function Composer({ onSend }: { onSend: (t: string)
                     ? "Research mode on: NEXORA searches the web, reads pages and cites sources. Click for normal chat."
                     : "Research mode: search the web, read pages and answer with citations"
                 }
+                aria-label="Research mode"
                 className={cn(
-                  "h-8 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] border transition",
+                  "h-8 pl-2.5 pr-3 rounded-full inline-flex items-center gap-1.5 text-[12.5px] font-medium border transition",
                   researchMode
-                    ? "text-[var(--accent)] bg-[var(--accent-soft)] border-[var(--accent)]/40"
-                    : "text-[var(--muted)] border-transparent hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)]",
+                    ? "bg-[var(--accent)] text-[var(--accent-ink)] border-[var(--accent)] shadow-[0_0_0_3px_var(--accent-soft),0_0_18px_var(--accent-soft)]"
+                    : "text-[var(--foreground)] border-[var(--accent)]/55 bg-[var(--accent-soft)]/40 hover:bg-[var(--accent-soft)] hover:border-[var(--accent)]",
                   isTyping && "opacity-40 pointer-events-none",
                 )}
               >
-                <Telescope size={14} /> Research
+                <Telescope size={14} className={researchMode ? "" : "text-[var(--accent)]"} />
+                Research
+                <span
+                  className={cn(
+                    "ml-0.5 px-1.5 rounded-full text-[10px] uppercase tracking-wide",
+                    researchMode ? "bg-[var(--accent-ink)]/15" : "text-[var(--muted)]",
+                  )}
+                >
+                  {researchMode ? "on" : "off"}
+                </span>
               </button>
               <span className="hidden md:inline ml-2 text-[11px] text-[var(--muted)]">
                 {modelLabel(model)} · <kbd className="px-1.5 py-0.5 rounded-md hairline text-[10px]">↵</kbd> send ·{" "}
@@ -246,7 +276,11 @@ export const Composer = memo(function Composer({ onSend }: { onSend: (t: string)
           </div>
         </div>
         <p className="text-center text-[11px] text-[var(--muted)] mt-2.5 tracking-wide">
-          {listening ? "Listening… speak now." : "Nexora may compose imperfectly — please verify precious details."}
+          {listening
+            ? "Listening… speak now."
+            : researchMode
+              ? "Research mode: answers take 30 s to 3 min and cite the pages they come from. Check the sources."
+              : "NEXORA can make mistakes. Use Research mode for cited, verifiable answers."}
         </p>
       </div>
     </div>

@@ -32,7 +32,7 @@ export function Topbar({ title }: { title: string }) {
           to="/"
           className="hidden sm:inline-flex text-[13px] text-[var(--muted)] hover:text-[var(--foreground)] px-3 py-2 transition"
         >
-          Maison
+          About
         </Link>
         <ShareButton
           getUrl={() =>

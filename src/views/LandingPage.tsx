@@ -1,4 +1,4 @@
-import { LandingNav, LandingHero, Bento, HowItWorks, StorageNote, FinalCTA } from "@/features/landing/LandingSections";
+import { LandingNav, LandingHero, Bento, HowItWorks, Guardrails, FinalCTA } from "@/features/landing/LandingSections";
 
 export default function LandingPage() {
   return (
@@ -8,7 +8,7 @@ export default function LandingPage() {
         <LandingHero />
         <Bento />
         <HowItWorks />
-        <StorageNote />
+        <Guardrails />
         <FinalCTA />
       </main>
     </div>

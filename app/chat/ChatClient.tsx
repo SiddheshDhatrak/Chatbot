@@ -25,6 +25,7 @@ import { MessageList } from "@/features/chat/MessageList";
 import { Composer } from "@/features/chat/Composer";
 import { ArtifactPanel } from "@/features/chat/ArtifactPanel";
 import { cn, groupLabel } from "@/lib/cn";
+import { CREDIT } from "@/features/landing/content";
 
 export default function ChatClient({ sessionId }: { sessionId?: string }) {
   const router = useRouter();
@@ -92,9 +93,9 @@ export default function ChatClient({ sessionId }: { sessionId?: string }) {
             <Link href="/" className="flex items-center gap-2.5">
               <StarMark size={30} />
               <span>
-                <span className="font-display text-[19px] leading-none block">Nexora</span>
-                <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
-                  Maison d&rsquo;IA
+                <span className="font-display text-[19px] leading-none block tracking-wide">NEXORA</span>
+                <span className="block text-[10.5px] tracking-[0.02em] whitespace-nowrap text-[var(--muted)]">
+                  Research &amp; Evidence Agent
                 </span>
               </span>
             </Link>
@@ -194,6 +195,9 @@ export default function ChatClient({ sessionId }: { sessionId?: string }) {
               </p>
             )}
           </div>
+          <p className="px-4 py-3 border-t border-[var(--border)] text-center text-[10.5px] text-[var(--muted)]">
+            {CREDIT}
+          </p>
         </motion.aside>
       )}
 
@@ -219,7 +223,7 @@ export default function ChatClient({ sessionId }: { sessionId?: string }) {
               href="/"
               className="hidden sm:inline-flex text-[13px] text-[var(--muted)] hover:text-[var(--foreground)] px-3 py-2 transition"
             >
-              Maison
+              About
             </Link>
             <ShareButton
               getUrl={() => (shareable ? `${window.location.origin}/chat/${shareId}` : null)}
@@ -233,7 +237,7 @@ export default function ChatClient({ sessionId }: { sessionId?: string }) {
           <div className="flex-1 min-w-0 flex flex-col min-h-0">
             <div className="flex-1 overflow-y-auto">
               {messages.length === 0 ? (
-                <WelcomeHero onPick={handleSend} />
+                <WelcomeHero />
               ) : (
                 <MessageList messages={messages} />
               )}

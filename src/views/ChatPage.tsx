@@ -46,7 +46,7 @@ export default function ChatPage() {
         <div className="flex-1 min-w-0 flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto">
             {messages.length === 0 ? (
-              <WelcomeHero onPick={handleSend} />
+              <WelcomeHero />
             ) : (
               <MessageList messages={messages} />
             )}

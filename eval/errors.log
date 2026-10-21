@@ -1,0 +1,52 @@
+[2026-10-21T05:54:38.051Z] question=q07_everest_height mode=nexora provider=Groq status=429 attempt=1 retryAfterMs=748224
+headers:
+  retry-after: 749
+  x-ratelimit-limit-requests: 1000
+  x-ratelimit-limit-tokens: 8000
+  x-ratelimit-remaining-requests: 974
+  x-ratelimit-remaining-tokens: 7535
+  x-ratelimit-reset-requests: 37m26.4s
+  x-ratelimit-reset-tokens: 3.487s
+body:
+{"error":{"message":"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198683, Requested 3049. Please try again in 12m28.223999999s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+--------------------------------------------------------------------------------
+[2026-10-21T05:55:08.255Z] question=q07_everest_height mode=nexora provider=Groq status=429 attempt=2 retryAfterMs=843264
+headers:
+  retry-after: 844
+  x-ratelimit-limit-requests: 1000
+  x-ratelimit-limit-tokens: 8000
+  x-ratelimit-remaining-requests: 974
+  x-ratelimit-remaining-tokens: 8000
+  x-ratelimit-reset-requests: 37m26.4s
+  x-ratelimit-reset-tokens: 1ms
+body:
+{"error":{"message":"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198614, Requested 3338. Please try again in 14m3.264s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+--------------------------------------------------------------------------------
+[2026-10-21T05:58:43.343Z] question=q07_everest_height mode=nexora provider=Groq status=429 attempt=1 retryAfterMs=318816
+headers:
+  retry-after: 319
+  x-ratelimit-limit-requests: 1000
+  x-ratelimit-limit-tokens: 8000
+  x-ratelimit-remaining-requests: 975
+  x-ratelimit-remaining-tokens: 7339
+  x-ratelimit-reset-requests: 36m0s
+  x-ratelimit-reset-tokens: 4.957s
+body:
+{"error":{"message":"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199154, Requested 1584. Please try again in 5m18.816s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+--------------------------------------------------------------------------------
+[2026-10-21T05:59:13.503Z] question=q07_everest_height mode=nexora provider=Groq status=429 attempt=2 retryAfterMs=288576
+headers:
+  retry-after: 289
+  x-ratelimit-limit-requests: 1000
+  x-ratelimit-limit-tokens: 8000
+  x-ratelimit-remaining-requests: 975
+  x-ratelimit-remaining-tokens: 8000
+  x-ratelimit-reset-requests: 36m0s
+  x-ratelimit-reset-tokens: 1ms
+body:
+{"error":{"message":"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m5c61gn9e868cc6zemaw5z2c` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199084, Requested 1584. Please try again in 4m48.576s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+
+--------------------------------------------------------------------------------

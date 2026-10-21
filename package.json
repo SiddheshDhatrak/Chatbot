@@ -13,7 +13,8 @@
     "db:studio": "prisma studio",
     "postinstall": "prisma skills sync || exit 0",
     "try:agent": "tsx scripts/try-agent.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval": "tsx eval/run.ts"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

@@ -28,7 +28,7 @@ export function ShareButton({
     try {
       const nav = navigator as Navigator & { share?: (d: { title?: string; url: string }) => Promise<void> };
       if (nav.share && /Mobi|Android/i.test(navigator.userAgent)) {
-        await nav.share({ title: "Nexora conversation", url });
+        await nav.share({ title: "NEXORA conversation", url });
         return;
       }
     } catch {

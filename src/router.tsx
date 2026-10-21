@@ -9,7 +9,7 @@ function Fallback() {
     <div className="h-[100dvh] grid place-items-center">
       <div className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
         <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
-        Preparing the salon…
+        Loading NEXORA…
       </div>
     </div>
   );

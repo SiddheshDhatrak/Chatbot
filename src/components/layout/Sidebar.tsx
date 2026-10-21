@@ -11,6 +11,7 @@ import {
   Telescope,
 } from "lucide-react";
 import { useChatStore } from "@/store/useChatStore";
+import { CREDIT } from "@/features/landing/content";
 import { StarMark } from "@/components/StarMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/cn";
@@ -56,9 +57,9 @@ export function Sidebar() {
         <Link to="/" className="flex items-center gap-2.5 group">
           <StarMark size={30} />
           <span>
-            <span className="font-display text-[19px] leading-none block">Nexora</span>
-            <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
-              Maison d’IA
+            <span className="font-display text-[19px] leading-none block tracking-wide">NEXORA</span>
+            <span className="block text-[10.5px] tracking-[0.02em] whitespace-nowrap text-[var(--muted)]">
+              Research &amp; Evidence Agent
             </span>
           </span>
         </Link>
@@ -166,13 +167,14 @@ export function Sidebar() {
       <div className="p-3 border-t border-[var(--border)]">
         <div className="luxe-card rounded-2xl p-3 flex items-center gap-3">
           <div className="w-9 h-9 rounded-full grid place-items-center font-display text-[15px] text-[var(--accent-ink)] bg-gradient-to-br from-[var(--accent)] to-[var(--brand)]">
-            ✦
+            N
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium truncate">Local workspace</p>
-            <p className="text-[11px] text-[var(--muted)]">SQLite-backed · stored on this machine</p>
+            <p className="text-[11px] text-[var(--muted)]">Runs, notes &amp; sources stored in SQLite</p>
           </div>
         </div>
+        <p className="mt-2 text-center text-[10.5px] text-[var(--muted)]">{CREDIT}</p>
       </div>
     </motion.aside>
   );

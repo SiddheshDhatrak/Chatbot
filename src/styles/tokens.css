@@ -25,7 +25,7 @@
   --color-champagne-600: #a98850;
 
   --color-clay-400: #e08a6d;
-  --color-clay-500: #d97757;
+  --color-clay-500: #c98a6a;
   --color-clay-600: #b95c3e;
 
   --color-ink-900: #1a1815;
@@ -49,7 +49,7 @@
   --accent: #c9a96a;
   --accent-soft: rgba(201, 169, 106, 0.12);
   --accent-ink: #0a0908;
-  --brand: #d97757;
+  --brand: #5fa8a0; /* teal accent (was a clay orange) */
   --ring: rgba(201, 169, 106, 0.45);
   --shadow-luxe: 0 24px 80px -24px rgba(0, 0, 0, 0.8);
   --glass: rgba(18, 17, 16, 0.66);
@@ -74,7 +74,7 @@
   --accent: #8a6d3b;
   --accent-soft: rgba(201, 169, 106, 0.22);
   --accent-ink: #faf7f0;
-  --brand: #d97757;
+  --brand: #5fa8a0; /* teal accent (was a clay orange) */
   --ring: rgba(217, 119, 87, 0.4);
   --shadow-luxe: 0 24px 70px -28px rgba(90, 70, 40, 0.35);
   --glass: rgba(250, 247, 240, 0.72);

@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nexora — Maison d'IA",
-  description: "A luxurious AI chat salon with persistent history, powered by Groq",
+  title: "NEXORA — Autonomous Research & Evidence Agent",
+  description:
+    "Multi-step web research with live tool-use traces, citation tracking, persistent research notes and guardrails.",
 };
 
 export default function RootLayout({

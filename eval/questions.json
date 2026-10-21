@@ -1,0 +1,89 @@
+[
+  {
+    "id": "q01_groq_founder",
+    "category": "single_fact",
+    "question": "Who founded Groq and in what year was it founded?",
+    "groundTruth": ["Jonathan Ross", "2016"],
+    "match": "all",
+    "notes": "Groq was founded in 2016 by Jonathan Ross (ex-Google TPU). Both the name and the year are required."
+  },
+  {
+    "id": "q02_gptoss_lab_hq",
+    "category": "multi_hop",
+    "question": "In which city is the headquarters of the organization that released the gpt-oss open-weight models?",
+    "groundTruth": ["San Francisco"],
+    "notes": "Hop 1: gpt-oss was released by OpenAI (Aug 2025). Hop 2: OpenAI is headquartered in San Francisco."
+  },
+  {
+    "id": "q03_gptoss_context_groq",
+    "category": "time_sensitive",
+    "question": "What is the context window, in tokens, of GPT-OSS 120B on Groq according to Groq's documentation?",
+    "groundTruth": ["131,072", "131072", "131k", "128k"],
+    "notes": "GroqDocs model page lists 131,072 tokens. Provider limits can change, so this is time-sensitive."
+  },
+  {
+    "id": "q04_transformer_first_author",
+    "category": "multi_hop",
+    "question": "The paper 'Attention Is All You Need' introduced the Transformer. Who is listed as its first author, and which company was that author working for when it was published?",
+    "groundTruth": ["Ashish Vaswani", "Google"],
+    "match": "all",
+    "notes": "Hop 1: paper -> first author Ashish Vaswani. Hop 2: affiliation at publication (2017) was Google Brain."
+  },
+  {
+    "id": "q05_transformer_venue_city",
+    "category": "multi_hop",
+    "question": "At which conference was 'Attention Is All You Need' presented, and in which city was that edition of the conference held?",
+    "groundTruth": ["Long Beach"],
+    "notes": "Presented at NIPS (now NeurIPS) 2017, held in Long Beach, California. The city is the scored part."
+  },
+  {
+    "id": "q06_lightbulb_inventor",
+    "category": "conflicting_sources",
+    "question": "Who invented the incandescent light bulb?",
+    "groundTruth": ["Edison", "Swan"],
+    "notes": "Sources disagree: Thomas Edison is usually credited, but Joseph Swan developed a working bulb in parallel (and others earlier). A good answer reports the disagreement; either name counts as correct."
+  },
+  {
+    "id": "q07_everest_height",
+    "category": "conflicting_sources",
+    "question": "What is the official height of Mount Everest in metres?",
+    "groundTruth": ["8,848.86", "8848.86", "8,848", "8848", "8,849", "8849"],
+    "notes": "The 2020 China-Nepal survey gives 8,848.86 m; older sources say 8,848 m and some round to 8,849 m. Any of these counts; ideally the answer notes the revision."
+  },
+  {
+    "id": "q08_gptoss_input_price",
+    "category": "time_sensitive",
+    "question": "What is the current Groq API price per million input tokens for GPT-OSS 120B?",
+    "groundTruth": ["0.15", "$0.15"],
+    "notes": "Checked 2026-10-21 05:11 UTC on https://console.groq.com/docs/model/openai/gpt-oss-120b (read with read_page): PRICING block lists Input $0.15 (6.7M / $1), Cached Input $0.075, Output $0.60 per 1M tokens. Prices can change; re-check before a final run."
+  },
+  {
+    "id": "q09_openai_ceo",
+    "category": "time_sensitive",
+    "question": "Who is the current CEO of OpenAI?",
+    "groundTruth": ["Sam Altman", "Altman"],
+    "notes": "Sam Altman (stable over the evaluation window, but a leadership fact that can change)."
+  },
+  {
+    "id": "q10_transformer_year",
+    "category": "single_fact",
+    "question": "In what year was the paper 'Attention Is All You Need' published?",
+    "groundTruth": ["2017"],
+    "notes": "Published June 2017 on arXiv, presented at NIPS 2017."
+  },
+  {
+    "id": "q11_gptoss_120b_vs_20b",
+    "category": "comprehensive_synthesis",
+    "question": "Compare the context window and pricing of GPT-OSS 120B and GPT-OSS 20B on Groq.",
+    "groundTruth": [["131,072", "131K"], "$0.15", "$0.60", "$0.075", "$0.30"],
+    "match": "all",
+    "notes": "Slide-style comparison. Every figure was read on 2026-10-21 05:11 UTC with read_page from the Groq model pages; none written from memory. https://console.groq.com/docs/model/openai/gpt-oss-120b: CONTEXT WINDOW 131,072 (the page text also says '131K'), MAX OUTPUT TOKENS 65,536; PRICING Input $0.15, Cached Input $0.075, Output $0.60 per 1M tokens. https://console.groq.com/docs/model/openai/gpt-oss-20b: CONTEXT WINDOW 131,072, MAX OUTPUT TOKENS 65,536; PRICING Input $0.075, Cached Input $0.037, Output $0.30 per 1M tokens. Both models share the 131,072 context window, so it is one required figure (accepted as 131,072 or 131K). Required key figures (match all): context window, 120B input $0.15 and output $0.60, 20B input $0.075 and output $0.30; score gives partial credit. Caveat: the 20B page body text is inconsistent (it says both '131K context length' and 'full 128K context window'); its limits table says 131,072, which is used here. Prices can change; re-check before a final run."
+  },
+  {
+    "id": "q12_rag_overview",
+    "category": "comprehensive_synthesis",
+    "question": "Explain how retrieval-augmented generation (RAG) works, and summarize its main benefits and limitations.",
+    "groundTruth": "Retrieval-augmented generation retrieves relevant documents from an external knowledge source, usually with a retriever over a vector index of embeddings, and adds them to the prompt so a language model generates an answer grounded in that retrieved context. It was introduced by Lewis et al. in 2020. Benefits: more factual and up-to-date answers without retraining, fewer hallucinations, the ability to cite sources, and use of private or domain-specific data. Limitations: answer quality depends on retrieval quality, irrelevant or conflicting passages can mislead the model, context window limits, added latency and cost, and the model can still hallucinate or ignore the retrieved text.",
+    "notes": "Scored with token-level F1 against this reference (optionally LLM-as-judge with --judge)."
+  }
+]
