@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
-import { ArrowUp, Square, Plus, Mic, MicOff, X, FileText } from "lucide-react";
+import { ArrowUp, Square, Plus, Mic, MicOff, X, FileText, Telescope } from "lucide-react";
 import { useChatStore } from "@/store/useChatStore";
 import { modelLabel } from "@/lib/models";
 import { hasVoiceInput, startDictation } from "@/lib/speech";
@@ -29,6 +29,8 @@ export function Composer({ onSend }: { onSend: (t: string) => void }) {
   const isTyping = useChatStore((s) => s.isTyping);
   const model = useChatStore((s) => s.model);
   const stop = useChatStore((s) => s.stop);
+  const researchMode = useChatStore((s) => s.researchMode);
+  const setResearchMode = useChatStore((s) => s.setResearchMode);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const voiceRef = useRef<{ stop: () => void } | null>(null);
@@ -159,7 +161,11 @@ export function Composer({ onSend }: { onSend: (t: string) => void }) {
               }
             }}
             rows={1}
-            placeholder="Message Claude — ask for anything, beautifully…"
+            placeholder={
+              researchMode
+                ? "Ask a research question — NEXORA will search, read and cite…"
+                : "Message Claude — ask for anything, beautifully…"
+            }
             className="w-full bg-transparent resize-none outline-none text-[14.5px] leading-relaxed placeholder:text-[var(--muted)] max-h-[180px] py-2"
           />
           {attachError && (
@@ -191,6 +197,25 @@ export function Composer({ onSend }: { onSend: (t: string) => void }) {
               >
                 {listening ? <MicOff size={15} /> : <Mic size={15} />}
               </ComposerIcon>
+              <button
+                onClick={() => setResearchMode(!researchMode)}
+                disabled={isTyping}
+                aria-pressed={researchMode}
+                title={
+                  researchMode
+                    ? "Research mode on: NEXORA searches the web, reads pages and cites sources. Click for normal chat."
+                    : "Research mode: search the web, read pages and answer with citations"
+                }
+                className={cn(
+                  "h-8 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] border transition",
+                  researchMode
+                    ? "text-[var(--accent)] bg-[var(--accent-soft)] border-[var(--accent)]/40"
+                    : "text-[var(--muted)] border-transparent hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)]",
+                  isTyping && "opacity-40 pointer-events-none",
+                )}
+              >
+                <Telescope size={14} /> Research
+              </button>
               <span className="hidden md:inline ml-2 text-[11px] text-[var(--muted)]">
                 {modelLabel(model)} · <kbd className="px-1.5 py-0.5 rounded-md hairline text-[10px]">↵</kbd> send ·{" "}
                 <kbd className="px-1.5 py-0.5 rounded-md hairline text-[10px]">⇧↵</kbd> newline

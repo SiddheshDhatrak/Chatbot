@@ -47,6 +47,13 @@ describe("claim-support check", () => {
     expect(warnings.some((w) => /not supported by their source \[1\]/.test(w))).toBe(true);
   });
 
+  it("checks a citation-only 'Source' table cell against its whole row", () => {
+    const good = "| GPT-OSS 120B (Groq) | 131,072 | [2] |";
+    const bad = "| GPT-OSS 120B (Groq) | 131,072 | [1] |";
+    expect(analyzeCitations(good, registry, seen).claims[0]!.status).toBe("supported");
+    expect(analyzeCitations(bad, registry, seen).claims[0]!.status).toBe("unsupported");
+  });
+
   it("treats a claim with nothing checkable as unchecked (not counted in supportRate)", () => {
     expect(checkClaim("it is fast and cheap", LLAMA_PAGE).status).toBe("unchecked");
   });

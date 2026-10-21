@@ -174,19 +174,24 @@ export function checkClaim(claim: string, sourceText: string): Omit<ClaimCheck, 
 
 /**
  * Visit every claim unit in the answer body that carries a citation: each
- * table cell, and each sentence of a prose line. `fn` may return a rewritten
- * unit. Returns the rewritten body.
+ * table cell, and each sentence of a prose line. `fn` gets the unit, its
+ * source numbers, and the claim text to check: normally the unit itself, but
+ * for a table cell holding only a citation (a "Source" column) it is the whole
+ * row. `fn` may return a rewritten unit. Returns the rewritten body.
  */
-function mapCitedUnits(body: string, fn: (unit: string, sources: number[]) => string): string {
+function mapCitedUnits(body: string, fn: (unit: string, sources: number[], claim: string) => string): string {
   return body
     .split("\n")
     .map((line) => {
       if (/^\s*\|/.test(line)) {
+        const rowClaim = claimText(line.replace(/\|/g, " "));
         return line
           .split("|")
           .map((cell) => {
             const ns = [...cell.matchAll(CITE_RE)].flatMap((m) => citationNumbers(m[1]!));
-            return ns.length ? fn(cell, [...new Set(ns)]) : cell;
+            if (!ns.length) return cell;
+            const own = claimText(cell);
+            return fn(cell, [...new Set(ns)], own || rowClaim);
           })
           .join("|");
       }
@@ -197,7 +202,7 @@ function mapCitedUnits(body: string, fn: (unit: string, sources: number[]) => st
         sentences
           .map((s) => {
             const ns = [...s.matchAll(CITE_RE)].flatMap((m) => citationNumbers(m[1]!));
-            return ns.length ? fn(s, [...new Set(ns)]) : s;
+            return ns.length ? fn(s, [...new Set(ns)], claimText(s)) : s;
           })
           .join(" ") + trailing
       );
@@ -208,8 +213,7 @@ function mapCitedUnits(body: string, fn: (unit: string, sources: number[]) => st
 /** Support-check every cited claim against the text of the source(s) it cites. */
 export function checkSupport(body: string, registry: Registry): ClaimCheck[] {
   const claims: ClaimCheck[] = [];
-  mapCitedUnits(body, (unit, ns) => {
-    const text = claimText(unit);
+  mapCitedUnits(body, (unit, ns, text) => {
     // A claim citing several sources may draw on all of them.
     const known = ns.filter((n) => registry.get(n));
     const union = known.map((n) => registry.get(n)!.text ?? "").join("\n");
@@ -230,8 +234,7 @@ export function checkSupport(body: string, registry: Registry): ClaimCheck[] {
 export function enforceSupport(text: string, registry: Registry): { text: string; rejected: ClaimCheck[] } {
   const { body, sources } = splitSources(text);
   const rejected: ClaimCheck[] = [];
-  const out = mapCitedUnits(body, (unit, ns) => {
-    const claim = claimText(unit);
+  const out = mapCitedUnits(body, (unit, ns, claim) => {
     const known = ns.filter((n) => registry.get(n));
     const union = known.map((n) => registry.get(n)!.text ?? "").join("\n");
     const result = known.length ? checkClaim(claim, union) : null;
@@ -246,6 +249,26 @@ export function enforceSupport(text: string, registry: Registry): { text: string
     return `${lead}${core.slice(0, core.length - punct.length)} (unverified)${punct}${tail}`;
   });
   return { text: out + sources, rejected };
+}
+
+/**
+ * For the UI: rewrite every [n] in the answer body as a markdown link
+ * "[\[n\]](#cite-n-<status>)" where status is that occurrence's support check
+ * result. Uses the same sentence/cell splitting as checkSupport, so the
+ * status matches what the server reported for that exact claim.
+ */
+export function annotateCitations(body: string, claims: ClaimCheck[]): string {
+  return mapCitedUnits(body, (unit, _ns, claim) => {
+    const text = claim.slice(0, 200);
+    return unit.replace(CITE_RE, (_m, inner: string) =>
+      citationNumbers(inner)
+        .map((n) => {
+          const status = claims.find((c) => c.index === n && c.text === text)?.status ?? "unchecked";
+          return `[\\[${n}\\]](#cite-${n}-${status})`;
+        })
+        .join(""),
+    );
+  });
 }
 
 // ---------------------------------------------------------------------------

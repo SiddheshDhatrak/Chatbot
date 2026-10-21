@@ -7,7 +7,18 @@ import { Check, Copy } from "lucide-react";
 import { cn } from "@/lib/cn";
 import "highlight.js/styles/github-dark.css";
 
-export function Markdown({ text, streaming }: { text: string; streaming?: boolean }) {
+/** Rendered by the caller for links of the form "#cite-<n>-<status>" (NEXORA research answers). */
+export type CitationRenderer = (n: number, status: string) => React.ReactNode;
+
+export function Markdown({
+  text,
+  streaming,
+  renderCitation,
+}: {
+  text: string;
+  streaming?: boolean;
+  renderCitation?: CitationRenderer;
+}) {
   return (
     <div className={cn("markdown-body", streaming && "stream-caret")}>
       <ReactMarkdown
@@ -20,6 +31,20 @@ export function Markdown({ text, streaming }: { text: string; streaming?: boolea
               <pre>{children}</pre>
             </div>
           ),
+          // Only research answers pass renderCitation; normal chat keeps default links.
+          ...(renderCitation
+            ? {
+                a: ({ href, title, children }) => {
+                  const m = href?.match(/^#cite-(\d+)-(\w+)$/);
+                  if (m) return <>{renderCitation(Number(m[1]), m[2]!)}</>;
+                  return (
+                    <a href={href} title={title} target="_blank" rel="noreferrer">
+                      {children}
+                    </a>
+                  );
+                },
+              }
+            : {}),
         }}
       >
         {text}

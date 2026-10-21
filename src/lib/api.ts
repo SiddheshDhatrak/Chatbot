@@ -1,8 +1,12 @@
+import type { AgentEvent } from "@/lib/research";
+
 export interface ApiMessage {
   id: string;
   role: "user" | "assistant";
   text: string;
   createdAt: number;
+  /** NEXORA: research answers link to their run (/api/runs/:id). */
+  runId?: string | null;
 }
 
 export interface ApiSessionMeta {
@@ -11,12 +15,15 @@ export interface ApiSessionMeta {
   updatedAt: number;
   createdAt: number;
   messageCount: number;
+  /** NEXORA: the session contains research runs. */
+  hasResearch?: boolean;
 }
 
 export type ChatEvent =
   | { type: "session"; sessionId: string }
   | { type: "delta"; delta: string }
   | { type: "error"; error: string }
+  | { type: "agent"; event: AgentEvent }
   | { type: "done" };
 
 /** POST /api/chat and yield SSE events as they arrive. */
@@ -25,12 +32,13 @@ export async function* chatEvents(
   message: string,
   signal: AbortSignal,
   model?: string,
+  mode?: "research",
 ): AsyncGenerator<ChatEvent> {
   const res = await fetch("/api/chat", {
     method: "POST",
     signal,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId, message, ...(model ? { model } : {}) }),
+    body: JSON.stringify({ sessionId, message, ...(model ? { model } : {}), ...(mode ? { mode } : {}) }),
   });
   if (!res.ok || !res.body) {
     let detail = "";
@@ -63,7 +71,9 @@ export async function* chatEvents(
         }
         try {
           const json = JSON.parse(data);
-          if (typeof json.delta === "string" && json.delta)
+          // Research frames: {"agent": {...}}. Keep-alive comments never get here (no "data:").
+          if (json.agent && typeof json.agent === "object") yield { type: "agent", event: json.agent as AgentEvent };
+          else if (typeof json.delta === "string" && json.delta)
             yield { type: "delta", delta: json.delta };
           else if (typeof json.sessionId === "string")
             yield { type: "session", sessionId: json.sessionId };

@@ -9,6 +9,7 @@ import {
   renameSession,
   deleteSession,
 } from "@/lib/api";
+import { applyAgentEvent, newResearchView, type ResearchView } from "@/lib/research";
 
 export type Role = "user" | "assistant";
 export interface Message {
@@ -17,7 +18,13 @@ export interface Message {
   text: string;
   createdAt: number;
   streaming?: boolean;
+  /** NEXORA: live trace, sources and metrics for a research answer. */
+  research?: ResearchView;
+  /** NEXORA: run that produced this answer (from the DB). */
+  runId?: string | null;
 }
+
+const RESEARCH_STOPPED = "Research stopped before an answer was produced.";
 export interface Session {
   id: string;
   title: string;
@@ -41,7 +48,10 @@ interface ChatState {
   theme: Theme;
   model: string;
   abortFlag: boolean;
+  /** NEXORA: send messages to the research agent instead of plain chat. */
+  researchMode: boolean;
 
+  setResearchMode: (v: boolean) => void;
   setTheme: (t: Theme) => void;
   setModel: (m: string) => void;
   setSidebarOpen: (v: boolean) => void;
@@ -90,7 +100,9 @@ export const useChatStore = create<ChatState>()(
       theme: "noir",
       model: typeof window !== "undefined" ? getModel() : "openai/gpt-oss-120b",
       abortFlag: false,
+      researchMode: false,
 
+      setResearchMode: (v) => set({ researchMode: v }),
       setTheme: (t) => set({ theme: t }),
       setModel: (m) => {
         setStoredModel(m);
@@ -224,12 +236,14 @@ export const useChatStore = create<ChatState>()(
         const signal = aborter.signal;
 
         const aId = uid();
+        const research = get().researchMode;
         const aMsg: Message = {
           id: aId,
           role: "assistant",
           text: "",
           createdAt: Date.now(),
           streaming: true,
+          ...(research ? { research: newResearchView() } : {}),
         };
         set((st) => ({
           sessions: st.sessions.map((s) =>
@@ -243,7 +257,7 @@ export const useChatStore = create<ChatState>()(
         let failed: string | null = null;
 
         try {
-          for await (const ev of chatEvents(postId, text, signal, get().model)) {
+          for await (const ev of chatEvents(postId, text, signal, get().model, research ? "research" : undefined)) {
             if (ev.type === "session") {
               serverId = ev.sessionId;
               if (tempSession) {
@@ -272,6 +286,26 @@ export const useChatStore = create<ChatState>()(
                     : s,
                 ),
               }));
+            } else if (ev.type === "agent") {
+              // NEXORA trace/answer/metrics: fold into the message's research view.
+              set((st) => ({
+                sessions: st.sessions.map((s) =>
+                  s.id === activeId
+                    ? {
+                        ...s,
+                        messages: s.messages.map((m) =>
+                          m.id === aId && m.research
+                            ? {
+                                ...m,
+                                research: applyAgentEvent(m.research, ev.event),
+                                ...(ev.event.type === "run_start" ? { runId: ev.event.runId } : {}),
+                              }
+                            : m,
+                        ),
+                      }
+                    : s,
+                ),
+              }));
             } else if (ev.type === "error") {
               failed = ev.error;
               break;
@@ -289,7 +323,10 @@ export const useChatStore = create<ChatState>()(
 
         const finalText = failed
           ? `⚠️ I couldn't generate a reply (${failed}). Please check your connection / API key and try again.`
-          : acc || "⚠️ The model returned an empty reply. Please try again.";
+          : acc ||
+            (research && (signal.aborted || get().abortFlag)
+              ? RESEARCH_STOPPED
+              : "⚠️ The model returned an empty reply. Please try again.");
         const artifact = failed ? null : extractArtifact(finalText);
 
         set((st) => ({
@@ -299,7 +336,17 @@ export const useChatStore = create<ChatState>()(
                   ...s,
                   updatedAt: Date.now(),
                   messages: s.messages.map((m) =>
-                    m.id === aId ? { ...m, text: finalText, streaming: false } : m,
+                    m.id === aId
+                      ? {
+                          ...m,
+                          text: finalText,
+                          streaming: false,
+                          // Stop the panel timer even if "done" never arrived (Stop / error).
+                          ...(m.research && !m.research.finishedAt
+                            ? { research: { ...m.research, finishedAt: Date.now() } }
+                            : {}),
+                        }
+                      : m,
                   ),
                 }
               : s,
@@ -451,7 +498,8 @@ export const useChatStore = create<ChatState>()(
     }),
     {
       name: "claude-luxe-store-v2",
-      partialize: (s) => ({ theme: s.theme, sidebarOpen: s.sidebarOpen, model: s.model }) as ChatState,
+      partialize: (s) =>
+        ({ theme: s.theme, sidebarOpen: s.sidebarOpen, model: s.model, researchMode: s.researchMode }) as ChatState,
     },
   ),
 );

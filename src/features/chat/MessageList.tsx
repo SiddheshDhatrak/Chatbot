@@ -9,6 +9,7 @@ import { Markdown } from "@/components/ui/Markdown";
 import { getFeedback, setFeedback, type FeedbackValue } from "@/lib/feedback";
 import { toggleReadAloud, canSpeak, stopSpeaking, copyText } from "@/lib/speech";
 import { cn } from "@/lib/cn";
+import { ResearchAnswer, ResearchFooter, ResearchPanel, SourcesBlock } from "@/features/chat/Research";
 
 export function MessageList({ messages }: { messages: Message[] }) {
   const endRef = useRef<HTMLDivElement>(null);
@@ -70,8 +71,8 @@ function AssistantRow({ message }: { message: Message }) {
 
   useEffect(() => () => stopSpeaking(), []);
 
-  // thinking shimmer when empty + streaming
-  if (!message.text) {
+  // thinking shimmer when empty + streaming (research answers show their live panel instead)
+  if (!message.text && !message.research) {
     return (
       <div className="flex gap-3.5">
         <StarMark size={30} className="mt-0.5" />
@@ -107,9 +108,18 @@ function AssistantRow({ message }: { message: Message }) {
       <StarMark size={30} className="mt-1 shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-1.5">
-          Claude
+          {message.research ? "NEXORA · Research" : "Claude"}
         </p>
-        <Markdown text={message.text} streaming={message.streaming} />
+        {message.research ? (
+          <>
+            <ResearchPanel view={message.research} streaming={message.streaming} />
+            {message.text && <ResearchAnswer text={message.text} view={message.research} streaming={message.streaming} />}
+            <SourcesBlock view={message.research} />
+            <ResearchFooter view={message.research} />
+          </>
+        ) : (
+          <Markdown text={message.text} streaming={message.streaming} />
+        )}
         {!message.streaming && (
           <div className="flex items-center gap-1 mt-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
             <ActionBtn
@@ -147,14 +157,17 @@ function AssistantRow({ message }: { message: Message }) {
             >
               <ThumbsDown size={13} />
             </ActionBtn>
-            <ActionBtn
-              title="Retry last reply"
-              className="gap-1.5 !px-2.5"
-              disabled={isTyping}
-              onClick={() => void regenerate()}
-            >
-              <RotateCcw size={13} /> <span className="text-[12px]">Retry</span>
-            </ActionBtn>
+            {/* Retry re-runs plain chat, so it is hidden on research answers. */}
+            {!message.research && (
+              <ActionBtn
+                title="Retry last reply"
+                className="gap-1.5 !px-2.5"
+                disabled={isTyping}
+                onClick={() => void regenerate()}
+              >
+                <RotateCcw size={13} /> <span className="text-[12px]">Retry</span>
+              </ActionBtn>
+            )}
           </div>
         )}
       </div>
