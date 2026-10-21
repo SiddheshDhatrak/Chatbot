@@ -63,10 +63,12 @@ const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n)}…` : s
 
 /** Strip the <untrusted_web_data> wrapper and parse the JSON inside, if possible. */
 function unwrap(observation: string): { raw: string; data: unknown } {
-  const raw = observation
-    .replace(/^\s*<untrusted_web_data[^>]*>\s*/, "")
-    .replace(/\s*<\/untrusted_web_data>\s*…?\s*$/, "")
-    .trim();
+  // Linear trimming (no regex over trailing whitespace).
+  let raw = observation.trim();
+  if (raw.startsWith("<untrusted_web_data")) raw = raw.slice(raw.indexOf(">") + 1);
+  if (raw.endsWith("…")) raw = raw.slice(0, -1).trimEnd();
+  if (raw.endsWith("</untrusted_web_data>")) raw = raw.slice(0, -"</untrusted_web_data>".length);
+  raw = raw.trim();
   try {
     return { raw, data: JSON.parse(raw) };
   } catch {

@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { streamReply, SYSTEM_PROMPT, type ChatMsg } from "@/server/ai";
 import { sanitizeModel } from "@/lib/models";
 import { runAgent, splitSources, STOPPED_MESSAGE } from "@/server/agent";
+import { withStoppedMarker } from "@/lib/chatMarkers";
 
 export const runtime = "nodejs";
 // Research runs can take minutes (Groq free-tier rate-limit pauses of 30-50s).
@@ -84,22 +85,38 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       const enc = new TextEncoder();
-      const push = (s: string) => controller.enqueue(enc.encode(s));
+      const push = (s: string) => {
+        if (clientGone.aborted) return; // client gone: nothing to write to
+        try {
+          controller.enqueue(enc.encode(s));
+        } catch {
+          /* stream already closed */
+        }
+      };
       push(sse(JSON.stringify({ sessionId })));
       try {
+        // clientGone is passed to the upstream fetch (Groq / Pollinations), so a
+        // disconnect or Stop cancels generation there too.
         for await (const delta of streamReply(chat, { signal: clientGone, model })) {
           if (clientGone.aborted) break;
           full += delta;
           push(sse(JSON.stringify({ delta })));
         }
       } catch (err) {
-        streamError =
-          err instanceof Error ? err.message : "AI provider failed";
-        console.error("[api/chat]", streamError);
-        push(sse(JSON.stringify({ error: streamError })));
+        if (!clientGone.aborted) {
+          streamError = err instanceof Error ? err.message : "AI provider failed";
+          console.error("[api/chat]", streamError);
+          push(sse(JSON.stringify({ error: streamError })));
+        }
+        // Aborted by the client: not an error; the partial answer is saved below.
       } finally {
         try {
-          if (full.trim()) {
+          if (clientGone.aborted) {
+            // Stopped: save only what was streamed so far, clearly marked.
+            await db.message.create({
+              data: { sessionId, role: "assistant", content: withStoppedMarker(full) },
+            });
+          } else if (full.trim()) {
             await db.message.create({
               data: { sessionId, role: "assistant", content: full },
             });
@@ -120,7 +137,11 @@ export async function POST(req: NextRequest) {
           console.error("[api/chat] persist failed:", dbErr);
         }
         if (!clientGone.aborted) push(sse("[DONE]"));
-        controller.close();
+        try {
+          controller.close();
+        } catch {
+          /* already closed by the disconnect */
+        }
       }
     },
     cancel() {

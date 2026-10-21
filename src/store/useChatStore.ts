@@ -11,6 +11,8 @@ import {
   deleteSession,
 } from "@/lib/api";
 import { applyAgentEvent, newResearchView, type ResearchView } from "@/lib/research";
+import { throttle, type Throttled } from "@/lib/throttle";
+import { withStoppedMarker } from "@/lib/chatMarkers";
 
 export type Role = "user" | "assistant";
 export interface Message {
@@ -74,6 +76,8 @@ const isTempId = (id: string | null) => !id || id.startsWith("local-");
 
 /** In-flight fetch aborter for the active stream. */
 let aborter: AbortController | null = null;
+/** Throttled renderer of the active stream (cancelled on Stop). */
+let streamRender: Throttled | null = null;
 
 function titleFrom(text: string) {
   const t = text.replace(/[#*`>\n]/g, " ").trim().slice(0, 42);
@@ -204,8 +208,22 @@ export const useChatStore = create<ChatState>()(
       },
 
       stop: () => {
+        // Abort the request and update the UI at once, even if deltas are still buffered.
         aborter?.abort();
-        set({ abortFlag: true, isTyping: false, streamingId: null });
+        streamRender?.cancel();
+        const sid = get().streamingId;
+        set((st) => ({
+          abortFlag: true,
+          isTyping: false,
+          streamingId: null,
+          sessions: sid
+            ? st.sessions.map((s) =>
+                s.messages.some((m) => m.id === sid)
+                  ? { ...s, messages: s.messages.map((m) => (m.id === sid ? { ...m, streaming: false } : m)) }
+                  : s,
+              )
+            : st.sessions,
+        }));
       },
 
       send: async (raw) => {
@@ -259,7 +277,23 @@ export const useChatStore = create<ChatState>()(
 
         let serverId: string | null = postId;
         let acc = "";
+        let shown = ""; // what the renderer has actually received
         let failed: string | null = null;
+
+        // Deltas can arrive hundreds of times per second; render at most every 50 ms.
+        const render = throttle(() => {
+          if (get().abortFlag) return;
+          shown = acc;
+          const snapshot = acc;
+          set((st) => ({
+            sessions: st.sessions.map((s) =>
+              s.id === activeId
+                ? { ...s, messages: s.messages.map((m) => (m.id === aId ? { ...m, text: snapshot } : m)) }
+                : s,
+            ),
+          }));
+        });
+        streamRender = render;
 
         try {
           for await (const ev of chatEvents(postId, text, signal, get().model, research ? "research" : undefined)) {
@@ -278,19 +312,7 @@ export const useChatStore = create<ChatState>()(
             } else if (ev.type === "delta") {
               if (get().abortFlag) break;
               acc += ev.delta;
-              const snapshot = acc;
-              set((st) => ({
-                sessions: st.sessions.map((s) =>
-                  s.id === activeId
-                    ? {
-                        ...s,
-                        messages: s.messages.map((m) =>
-                          m.id === aId ? { ...m, text: snapshot } : m,
-                        ),
-                      }
-                    : s,
-                ),
-              }));
+              render.schedule();
             } else if (ev.type === "agent") {
               // NEXORA trace/answer/metrics: fold into the message's research view.
               set((st) => ({
@@ -326,12 +348,18 @@ export const useChatStore = create<ChatState>()(
           }
         }
 
+        const stopped = signal.aborted || get().abortFlag;
+        // Stop: keep exactly what was on screen (no late buffered text). Otherwise render the rest.
+        render.cancel();
+        if (streamRender === render) streamRender = null;
         const finalText = failed
           ? `⚠️ I couldn't generate a reply (${failed}). Please check your connection / API key and try again.`
-          : acc ||
-            (research && (signal.aborted || get().abortFlag)
-              ? RESEARCH_STOPPED
-              : "⚠️ The model returned an empty reply. Please try again.");
+          : stopped && !research
+            ? withStoppedMarker(shown)
+            : acc ||
+              (research && stopped
+                ? RESEARCH_STOPPED
+                : "⚠️ The model returned an empty reply. Please try again.");
         const artifact = failed ? null : extractArtifact(finalText);
 
         set((st) => ({
@@ -417,6 +445,22 @@ export const useChatStore = create<ChatState>()(
         }));
         aborter?.abort();
         aborter = new AbortController();
+        let acc = "";
+        let regenShown = "";
+        // Same 50 ms batching as send(): never render once per delta.
+        const regenRender = throttle(() => {
+          if (get().abortFlag) return;
+          const snapshot = acc;
+          regenShown = acc;
+          set((st) => ({
+            sessions: st.sessions.map((x) =>
+              x.id === activeId
+                ? { ...x, messages: x.messages.map((m) => (m.id === aId ? { ...m, text: snapshot } : m)) }
+                : x,
+            ),
+          }));
+        });
+        streamRender = regenRender;
         try {
           const res = await fetch("/api/chat", {
             method: "POST",
@@ -427,7 +471,6 @@ export const useChatStore = create<ChatState>()(
           const reader = res.body?.getReader();
           const decoder = new TextDecoder();
           let buf = "";
-          let acc = "";
           if (reader) {
             for (;;) {
               const { done, value } = await reader.read();
@@ -444,25 +487,15 @@ export const useChatStore = create<ChatState>()(
                   const json = JSON.parse(data);
                   if (typeof json.delta === "string") {
                     acc += json.delta;
-                    const snapshot = acc;
-                    set((st) => ({
-                      sessions: st.sessions.map((x) =>
-                        x.id === activeId
-                          ? {
-                              ...x,
-                              messages: x.messages.map((m) =>
-                                m.id === aId ? { ...m, text: snapshot } : m,
-                              ),
-                            }
-                          : x,
-                      ),
-                    }));
+                    regenRender.schedule();
                   }
                 } catch {}
               }
             }
             reader.releaseLock();
           }
+          regenRender.cancel(); // the final set below writes the full text
+          if (streamRender === regenRender) streamRender = null;
           const artifact = extractArtifact(acc);
           set((st) => ({
             sessions: st.sessions.map((x) =>
@@ -484,13 +517,16 @@ export const useChatStore = create<ChatState>()(
             artifactOpen: artifact ? true : st.artifactOpen,
           }));
         } catch {
+          regenRender.cancel();
+          if (streamRender === regenRender) streamRender = null;
+          const stoppedText = get().abortFlag ? withStoppedMarker(regenShown) : null;
           set((st) => ({
             sessions: st.sessions.map((x) =>
               x.id === activeId
                 ? {
                     ...x,
                     messages: x.messages.map((m) =>
-                      m.id === aId ? { ...m, text: "⚠️ Regeneration failed — please try again.", streaming: false } : m,
+                      m.id === aId ? { ...m, text: stoppedText ?? "⚠️ Regeneration failed — please try again.", streaming: false } : m,
                     ),
                   }
                 : x,

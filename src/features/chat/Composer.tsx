@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { memo, useRef, useState, useEffect } from "react";
 import { ArrowUp, Square, Plus, Mic, MicOff, X, FileText, Telescope } from "lucide-react";
 import { useChatStore } from "@/store/useChatStore";
 import { modelLabel } from "@/lib/models";
@@ -21,7 +21,8 @@ function extOf(name: string): string {
   return parts.length > 1 ? (parts.pop() || "txt").slice(0, 10) : "txt";
 }
 
-export function Composer({ onSend }: { onSend: (t: string) => void }) {
+/** Memoized: the chat page re-renders on every streamed update; the composer doesn't need to. */
+export const Composer = memo(function Composer({ onSend }: { onSend: (t: string) => void }) {
   const [value, setValue] = useState("");
   const [files, setFiles] = useState<Attachment[]>([]);
   const [listening, setListening] = useState(false);
@@ -250,7 +251,7 @@ export function Composer({ onSend }: { onSend: (t: string) => void }) {
       </div>
     </div>
   );
-}
+});
 
 function ComposerIcon({
   children,

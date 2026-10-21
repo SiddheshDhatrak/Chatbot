@@ -65,19 +65,45 @@ export interface CitationReport {
 /** What the checker needs to know about each source. `text` = what the agent saw (page text or snippet). */
 export type Registry = { get(i: number): { url: string; wasRead: boolean; text?: string } | undefined };
 
-const CITE_RE = /\[(\d{1,3}(?:\s*[,–-]\s*\d{1,3})*)\]/g;
+// All patterns in this file run on partial, model-written text, so they must
+// not backtrack: no adjacent unbounded quantifiers over the same characters.
+// Spaces inside a marker are bounded ({0,2}); see citations.perf.test.ts.
+const CITE_RE = /\[(\d{1,3}(?: {0,2}[,–-] {0,2}\d{1,3}){0,20})\]/g;
 const round3 = (n: number) => Math.round(n * 1000) / 1000;
+
+/** A line that is just a "Sources"/"References" heading (any of #, **, :). Linear. */
+function isSourcesHeading(line: string): boolean {
+  if (line.length > 60) return false;
+  const core = line.replace(/[#*_:\s]/g, "").toLowerCase();
+  return core === "sources" || core === "references";
+}
 
 /** Split the answer into body and the trailing "Sources" section (if any). */
 export function splitSources(text: string): { body: string; sources: string } {
-  const m = text.match(/^\s*(?:#{1,4}\s*)?\**\s*(?:sources|references)\s*\**\s*:?\s*\**\s*$/im);
-  if (!m || m.index === undefined) return { body: text, sources: "" };
-  return { body: text.slice(0, m.index), sources: text.slice(m.index) };
+  // Scan line by line (the old single regex backtracked exponentially on
+  // "Sources" + long whitespace). Offsets are tracked so slicing is exact.
+  let offset = 0;
+  for (const line of text.split("\n")) {
+    if (isSourcesHeading(line)) return { body: text.slice(0, offset), sources: text.slice(offset) };
+    offset += line.length + 1;
+  }
+  return { body: text, sources: "" };
 }
 
-/** gpt-oss sometimes cites as 【3】 or 【3†L10-L20】; normalise to [3]. */
+/** gpt-oss sometimes cites as 【3】 or 【3†L10-L20】; normalise to [3]. Bounded, so unclosed markers stay cheap. */
 export function normalizeCitations(text: string): string {
-  return text.replace(/【\s*(\d{1,3})(?:†[^】]*)?\s*】/g, "[$1]");
+  return text.replace(/【 {0,2}(\d{1,3})(?:†[^】\n]{0,80})? {0,2}】/g, "[$1]");
+}
+
+/** Remove trailing whitespace and markdown rules ("---", "***") from the end. Linear. */
+function trimTrailingRules(s: string): string {
+  let out = s.trimEnd();
+  for (;;) {
+    const lastLine = out.slice(out.lastIndexOf("\n") + 1).trim();
+    if (lastLine.length >= 3 && (/^-+$/.test(lastLine) || /^\*+$/.test(lastLine))) {
+      out = out.slice(0, out.length - lastLine.length).trimEnd();
+    } else return out;
+  }
 }
 
 /** Numbers inside one citation marker: "1, 3" -> [1,3]; "2-4" -> [2,3,4]. */
@@ -98,17 +124,21 @@ function citationNumbers(inner: string): number[] {
 
 /** Lowercase, unify dashes/spaces, drop "$" and digit-group separators ("131,072" / "131 072" -> "131072"). */
 function normalizeForNumbers(s: string): string {
-  let t = s
+  const t = s
     .toLowerCase()
     .replace(/[‐-―−]/g, "-")
     .replace(/[   ]/g, " ")
     .replace(/\$/g, " ");
-  let prev = "";
-  while (prev !== t) {
-    prev = t;
-    t = t.replace(/(\d)[ ,](?=\d{3}(?!\d))/g, "$1");
+  // Join digit groups in one linear pass: drop a " " or "," that sits between a
+  // digit and exactly three digits ("131,072" / "131 072" -> "131072").
+  let out = "";
+  const d = (i: number) => i >= 0 && i < t.length && t.charCodeAt(i) >= 48 && t.charCodeAt(i) <= 57;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i]!;
+    if ((c === " " || c === ",") && d(i - 1) && d(i + 1) && d(i + 2) && d(i + 3) && !d(i + 4)) continue;
+    out += c;
   }
-  return t.replace(/\s+/g, " ");
+  return out.replace(/\s+/g, " ");
 }
 
 /** Letters and digits only, for name matching ("GPT-OSS" ~ "gpt oss" ~ "gptoss"). */
@@ -124,7 +154,7 @@ const TERM_STOP = new Set(
 function claimText(unit: string): string {
   return unit
     .replace(CITE_RE, " ")
-    .replace(/\(unverified[^)]*\)/gi, " ")
+    .replace(/\(unverified[^)\n]{0,60}\)/gi, " ")
     .replace(/[*_`#>]/g, "")
     .replace(/^\s*(?:\d+[.)]|[-+•])\s+/, "")
     .trim();
@@ -195,8 +225,8 @@ function mapCitedUnits(body: string, fn: (unit: string, sources: number[], claim
           })
           .join("|");
       }
-      const trailing = line.match(/\s*$/)![0]; // keep markdown hard breaks
-      const content = line.slice(0, line.length - trailing.length);
+      const content = line.trimEnd(); // keep trailing spaces (markdown hard breaks) aside
+      const trailing = line.slice(content.length);
       const sentences = content.split(/(?<=[.!?])\s+(?=[*_(\["A-Z0-9-])/);
       return (
         sentences
@@ -240,13 +270,15 @@ export function enforceSupport(text: string, registry: Registry): { text: string
     const result = known.length ? checkClaim(claim, union) : null;
     if (result && result.status !== "unsupported") return unit;
     for (const n of ns) rejected.push({ index: n, text: claim.slice(0, 200), ...(result ?? { status: "unsupported", missingNumbers: [], missingTerms: [] }) });
-    const stripped = unit.replace(/\s*\[(\d{1,3}(?:\s*[,–-]\s*\d{1,3})*)\]/g, "").replace(/\s+([.,;:!?])/g, "$1");
+    // Drop the markers, then the space a marker leaves before punctuation (bounded: linear).
+    const stripped = unit.replace(CITE_RE, "").replace(/[ \t]{1,8}([.,;:!?])/g, "$1");
     if (/\(unverified/i.test(stripped)) return stripped;
-    const lead = stripped.match(/^\s*/)![0];
-    const tail = stripped.match(/\s*$/)![0];
+    const lead = stripped.slice(0, stripped.length - stripped.trimStart().length);
+    const tail = stripped.slice(stripped.trimEnd().length);
     const core = stripped.trim();
-    const punct = core.match(/[.!?]*$/)![0];
-    return `${lead}${core.slice(0, core.length - punct.length)} (unverified)${punct}${tail}`;
+    let p = core.length;
+    while (p > 0 && ".!?".includes(core[p - 1]!)) p--;
+    return `${lead}${core.slice(0, p)} (unverified)${core.slice(p)}${tail}`;
   });
   return { text: out + sources, rejected };
 }
@@ -280,7 +312,7 @@ export function annotateCitations(body: string, claims: ClaimCheck[]): string {
  * registry, so every [n] is listed with the URL that was really retrieved.
  */
 export function withHarnessSources(text: string, sources: (SourceRef & { wasRead?: boolean })[]): string {
-  const body = splitSources(text).body.replace(/\s*(?:-{3,}|\*{3,})\s*$/, "").trimEnd();
+  const body = trimTrailingRules(splitSources(text).body);
   if (!sources.length) return body;
   const list = sources
     .map(

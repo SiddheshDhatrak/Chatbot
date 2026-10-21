@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Copy, Check, RotateCcw, Volume2, VolumeX, ThumbsUp, ThumbsDown } from "lucide-react";
 import type { Message } from "@/store/useChatStore";
@@ -13,27 +13,40 @@ import { ResearchMessage } from "@/features/chat/Research";
 
 export function MessageList({ messages }: { messages: Message[] }) {
   const endRef = useRef<HTMLDivElement>(null);
-  const lastMessageText = messages[messages.length - 1]?.text.slice(-40);
+  const last = messages[messages.length - 1];
+  const lastMessageText = last?.text.slice(-40);
+  const lastStreaming = !!last?.streaming;
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length, lastMessageText]);
+    // While streaming, jump instead of restarting a smooth-scroll animation on every update.
+    endRef.current?.scrollIntoView({ behavior: lastStreaming ? "auto" : "smooth", block: "end" });
+  }, [messages.length, lastMessageText, lastStreaming]);
 
   useEffect(() => () => stopSpeaking(), []);
 
+  // Rows are memoized: the store keeps unchanged message objects identical, so
+  // only the streaming message re-renders (re-parsing every message on every
+  // update froze the tab on long sessions).
   return (
     <div className="max-w-[800px] mx-auto w-full px-4 md:px-6 py-6 space-y-7">
       {messages.map((m) =>
         m.role === "user" ? (
-          <UserBubble key={m.id} message={m} />
+          <UserBubbleRow key={m.id} message={m} />
         ) : (
-          <AssistantRow key={m.id} message={m} />
+          <AssistantRowMemo key={m.id} message={m} />
         ),
       )}
       <div ref={endRef} className="h-2" />
     </div>
   );
 }
+
+const UserBubbleRow = memo(function UserBubbleRow({ message }: { message: Message }) {
+  return <UserBubble message={message} />;
+});
+const AssistantRowMemo = memo(function AssistantRowMemo({ message }: { message: Message }) {
+  return <AssistantRow message={message} />;
+});
 
 function UserBubble({ message }: { message: Message }) {
   return (

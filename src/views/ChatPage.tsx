@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { Topbar } from "@/components/layout/Topbar";
@@ -29,11 +29,15 @@ export default function ChatPage() {
   const active = sessions.find((s) => s.id === (id ?? activeId));
   const messages = active?.messages ?? [];
 
-  const handleSend = async (text: string) => {
-    await send(text);
-    const current = useChatStore.getState().activeId;
-    if (current && current !== id) navigate(`/chat/${current}`, { replace: true });
-  };
+  // Stable callback so the memoized Composer doesn't re-render on every streamed update.
+  const handleSend = useCallback(
+    async (text: string) => {
+      await send(text);
+      const current = useChatStore.getState().activeId;
+      if (current && current !== id) navigate(`/chat/${current}`, { replace: true });
+    },
+    [send, id, navigate],
+  );
 
   return (
     <AppShell>

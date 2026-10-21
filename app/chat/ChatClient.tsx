@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -69,11 +69,15 @@ export default function ChatClient({ sessionId }: { sessionId?: string }) {
     return [...map.entries()];
   }, [sessions, q]);
 
-  const handleSend = async (text: string) => {
-    await send(text);
-    const current = useChatStore.getState().activeId;
-    if (current && current !== sessionId) router.replace(`/chat/${current}`);
-  };
+  // Stable callback so the memoized Composer doesn't re-render on every streamed update.
+  const handleSend = useCallback(
+    async (text: string) => {
+      await send(text);
+      const current = useChatStore.getState().activeId;
+      if (current && current !== sessionId) router.replace(`/chat/${current}`);
+    },
+    [send, sessionId, router],
+  );
 
   return (
     <div className="h-[100dvh] flex overflow-hidden">
