@@ -8,6 +8,7 @@ import {
   Trash2,
   MessageSquareText,
   Pencil,
+  Telescope,
 } from "lucide-react";
 import { useChatStore } from "@/store/useChatStore";
 import { StarMark } from "@/components/StarMark";
@@ -55,7 +56,7 @@ export function Sidebar() {
         <Link to="/" className="flex items-center gap-2.5 group">
           <StarMark size={30} />
           <span>
-            <span className="font-display text-[19px] leading-none block">Claude</span>
+            <span className="font-display text-[19px] leading-none block">Nexora</span>
             <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
               Maison d’IA
             </span>
@@ -119,6 +120,11 @@ export function Sidebar() {
                   >
                     <MessageSquareText size={14} className="shrink-0 opacity-60" />
                     <span className="flex-1 truncate">{s.title}</span>
+                    {s.hasResearch && (
+                      <span title="Contains NEXORA research" aria-label="Contains research" className="shrink-0 group-hover:hidden">
+                        <Telescope size={12} className="text-[var(--accent)] opacity-80" />
+                      </span>
+                    )}
                     <span className="hidden group-hover:flex items-center gap-1">
                       <button
                         title="Rename"

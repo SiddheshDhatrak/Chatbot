@@ -55,6 +55,9 @@ model Run {
   finalAnswer       String?
   citationPrecision Float?
   cancelled         Boolean   @default(false) // client disconnected or pressed Stop
+  /// JSON: { version, citationReport, sources, metrics, warnings, events } so history renders like a live answer.
+  reportJson        String?
+  maxSteps          Int? // step limit this run used
   session           Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   steps             Step[]
   notes             Note[]

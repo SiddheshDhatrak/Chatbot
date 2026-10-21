@@ -3,7 +3,7 @@
  * NEXORA research answer UI: live trace panel, cited answer, Sources block
  * and metrics footer. Driven by the ResearchView built from agent frames.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   BookOpen,
@@ -12,13 +12,23 @@ import {
   CircleX,
   Globe,
   Hourglass,
+  ListTree,
   NotebookPen,
   Search,
   Telescope,
 } from "lucide-react";
 import { Markdown } from "@/components/ui/Markdown";
 import { annotateCitations, splitSources } from "@/server/citations";
-import { domainOf, isWaiting, type ResearchView, type SourceRef, type TraceItem } from "@/lib/research";
+import {
+  answerWarnings,
+  domainOf,
+  isWaiting,
+  type AgentMetrics,
+  type ResearchView,
+  type TraceItem,
+  type UISource,
+} from "@/lib/research";
+import { fetchRun, traceFromRun, viewFromRun, type RunData } from "@/lib/runs";
 import { cn } from "@/lib/cn";
 
 export const UNSUPPORTED_TIP = "The cited page does not contain this claim's figures";
@@ -143,25 +153,59 @@ function TraceLine({ item, isLast, running, now }: { item: TraceItem; isLast: bo
         {step}
         <ToolIcon tool={item.tool} />
         <span className="min-w-0">
-          <span className="font-medium">{item.tool}</span>{" "}
+          <span className="inline-block px-1.5 mr-1 rounded-md border border-[var(--accent)]/30 bg-[var(--accent-soft)] text-[11px] font-medium text-[var(--foreground)]">
+            {item.tool}
+          </span>
           <span className="text-[var(--muted)] break-all">{item.text}</span>
         </span>
       </li>
     );
   }
-  // observe
+  return <ObserveLine item={item} />;
+}
+
+/** Observation result; saved runs can expand to show the stored observation. */
+function ObserveLine({ item }: { item: TraceItem }) {
+  const [open, setOpen] = useState(false);
+  const icon = item.ok ? (
+    <CircleCheck size={13} className="mt-0.5 shrink-0 text-emerald-500" />
+  ) : (
+    <CircleX size={13} className="mt-0.5 shrink-0 text-red-400" />
+  );
+  const latency = item.latencyMs != null && (
+    <span className="ml-auto pl-2 tabular-nums text-[var(--muted)]">{secs(item.latencyMs)}</span>
+  );
+  if (!item.detail) {
+    return (
+      <li className="flex gap-2">
+        <span className="w-5 shrink-0" />
+        {icon}
+        <span className="min-w-0 text-[var(--muted)]">
+          <span className="line-clamp-2">{item.text}</span>
+        </span>
+        {latency}
+      </li>
+    );
+  }
   return (
-    <li className="flex gap-2">
-      <span className="w-5 shrink-0" />
-      {item.ok ? (
-        <CircleCheck size={13} className="mt-0.5 shrink-0 text-emerald-500" />
-      ) : (
-        <CircleX size={13} className="mt-0.5 shrink-0 text-red-400" />
+    <li>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        title={open ? "Hide observation" : "Show observation"}
+        className="w-full flex gap-2 text-left hover:text-[var(--foreground)]"
+      >
+        <span className="w-5 shrink-0" />
+        {icon}
+        <span className={cn("min-w-0 text-[var(--muted)]", !open && "line-clamp-2")}>{item.text}</span>
+        <ChevronDown size={12} className={cn("mt-1 shrink-0 text-[var(--muted)] transition-transform", open && "rotate-180")} />
+        {latency}
+      </button>
+      {open && (
+        <pre className="ml-12 mt-1.5 mb-1 p-2.5 rounded-lg bg-[var(--background-elev)] border border-[var(--border)] text-[11px] leading-relaxed whitespace-pre-wrap break-words max-h-[260px] overflow-y-auto">
+          {item.detail}
+        </pre>
       )}
-      <span className="min-w-0 text-[var(--muted)]">
-        <span className="line-clamp-2">{item.text}</span>
-      </span>
-      {item.latencyMs != null && <span className="ml-auto pl-2 tabular-nums text-[var(--muted)]">{secs(item.latencyMs)}</span>}
     </li>
   );
 }
@@ -174,7 +218,8 @@ export function ResearchAnswer({ text, view, streaming }: { text: string; view: 
   const answer = view.answer;
   // The harness appends a markdown Sources list; the Sources block below replaces it.
   const body = answer ? splitSources(text).body.trimEnd() : text;
-  const shown = answer ? annotateCitations(body, answer.report.claims) : body;
+  // Old runs have no report: every chip is "unchecked" (normal colour, still linked).
+  const shown = answer ? annotateCitations(body, answer.report?.claims ?? []) : body;
   const byIndex = new Map((answer?.sources ?? []).map((s) => [s.index, s]));
 
   return (
@@ -186,7 +231,7 @@ export function ResearchAnswer({ text, view, streaming }: { text: string; view: 
   );
 }
 
-function CitationChip({ n, status, source }: { n: number; status: string; source?: SourceRef }) {
+function CitationChip({ n, status, source }: { n: number; status: string; source?: UISource }) {
   const unsupported = status === "unsupported";
   const title = unsupported
     ? UNSUPPORTED_TIP
@@ -227,7 +272,8 @@ function CitationChip({ n, status, source }: { n: number; status: string; source
 export function SourcesBlock({ view }: { view: ResearchView }) {
   const answer = view.answer;
   if (!answer || answer.sources.length === 0) return null;
-  const read = new Set(answer.report.readBacked);
+  const readBacked = new Set(answer.report?.readBacked ?? []);
+  const read = { has: (i: number) => answer.sources.find((s) => s.index === i)?.wasRead ?? readBacked.has(i) };
   return (
     <div className="mt-4">
       <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-2">Sources</p>
@@ -309,39 +355,48 @@ function Badge({ tone, children }: { tone: "ok" | "muted" | "warn"; children: Re
 // Metrics footer
 // ---------------------------------------------------------------------------
 
+/** Metrics footer. Old runs only have part of the metrics; missing values are left out. */
 export function ResearchFooter({ view }: { view: ResearchView }) {
-  const m = view.metrics;
+  const m: Partial<AgentMetrics> | undefined = view.metrics ?? view.partialMetrics;
   if (!m) return null;
-  const support = view.answer?.report.supportRate ?? m.supportRate;
-  const notes = m.notesSaved + (m.autoNotesSaved ?? 0);
+  const support = view.answer?.report?.supportRate ?? m.supportRate;
   const label = (s: string) => s.replace(/_/g, " ");
-  const status =
-    m.status === "completed"
+  const status = !m.status
+    ? null
+    : m.status === "completed"
       ? "completed"
       : m.stoppedBy === "aborted"
         ? "stopped"
-        : m.status === m.stoppedBy
+        : !m.stoppedBy || m.status === m.stoppedBy
           ? label(m.status)
           : `${label(m.status)} (${label(m.stoppedBy)})`;
-  const parts: React.ReactNode[] = [
-    secs(m.latencyMs),
-    `${m.steps} steps`,
-    `${m.toolCalls} tool calls`,
-    `${m.tokens?.total.toLocaleString() ?? "—"} tokens`,
-    `${m.pagesRead} pages read`,
-    `${notes} notes`,
-    <span
-      key="support"
-      className={cn(support != null && support < 1 && "text-amber-500")}
-      title={support != null && support < 1 ? "Some cited claims were not found in their source" : undefined}
-    >
-      support {support == null ? "—" : `${Math.round(support * 100)}%`}
-    </span>,
-    m.model.replace(/^openrouter:/, "OpenRouter "),
-    <span key="status" className={cn(m.status !== "completed" && "text-amber-500")}>
-      {status}
-    </span>,
-  ];
+  const notes = m.notesSaved != null ? m.notesSaved + (m.autoNotesSaved ?? 0) : null;
+
+  const parts: React.ReactNode[] = [];
+  if (m.latencyMs != null) parts.push(secs(m.latencyMs));
+  if (m.steps != null) parts.push(`${m.steps}${m.maxSteps ? `/${m.maxSteps}` : ""} steps`);
+  if (m.toolCalls != null) parts.push(`${m.toolCalls} tool calls`);
+  if (m.tokens) parts.push(`${m.tokens.total.toLocaleString()} tokens`);
+  if (m.pagesRead != null) parts.push(`${m.pagesRead} pages read`);
+  if (notes != null) parts.push(`${notes} notes`);
+  if (support !== undefined)
+    parts.push(
+      <span
+        key="support"
+        className={cn(support != null && support < 1 && "text-amber-500")}
+        title={support != null && support < 1 ? "Some cited claims were not found in their source" : undefined}
+      >
+        support {support == null ? "—" : `${Math.round(support * 100)}%`}
+      </span>,
+    );
+  if (m.model) parts.push(m.model.replace(/^openrouter:/, "OpenRouter "));
+  if (status)
+    parts.push(
+      <span key="status" className={cn(m.status !== "completed" && "text-amber-500")}>
+        {status}
+      </span>,
+    );
+  if (!parts.length) return null;
   return (
     <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-[var(--muted)] tabular-nums">
       {parts.map((p, i) => (
@@ -351,5 +406,164 @@ export function ResearchFooter({ view }: { view: ResearchView }) {
         </span>
       ))}
     </p>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Warning banners
+// ---------------------------------------------------------------------------
+
+const MAX_BANNERS = 3;
+
+export function WarningBanners({ view }: { view: ResearchView }) {
+  const [all, setAll] = useState(false);
+  const warnings = answerWarnings(view);
+  if (!warnings.length) return null;
+  const shown = all ? warnings : warnings.slice(0, MAX_BANNERS);
+  return (
+    <div className="mt-3 space-y-1.5" role="status">
+      {shown.map((w, i) => (
+        <div
+          key={i}
+          className="flex gap-2 px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-500 text-[12px] leading-snug"
+        >
+          <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+          <span>{w}</span>
+        </div>
+      ))}
+      {warnings.length > MAX_BANNERS && (
+        <button onClick={() => setAll((a) => !a)} className="text-[11.5px] text-[var(--muted)] hover:text-[var(--foreground)]">
+          {all ? "Show fewer warnings" : `Show ${warnings.length - MAX_BANNERS} more warning(s)`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Saved runs: lazy load, answer from history, "View research trace"
+// ---------------------------------------------------------------------------
+
+/** Load a run when `enabled`. `loading` is true until the result for this id arrives. */
+function useRun(id: string | null | undefined, enabled: boolean) {
+  const [res, setRes] = useState<{ id: string; run: RunData | null } | null>(null);
+  useEffect(() => {
+    if (!enabled || !id) return;
+    let alive = true;
+    void fetchRun(id).then((run) => {
+      if (alive) setRes({ id, run });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [id, enabled]);
+  const current = res && res.id === id ? res : null;
+  return { run: current?.run ?? null, loading: enabled && !!id && !current };
+}
+
+/**
+ * Everything below the "NEXORA · Research" label for one answer:
+ * - while the run is live: the live trace panel and the streaming answer;
+ * - once finished (live or reloaded): cited answer, warnings, Sources, footer
+ *   and a "View research trace" button that loads the saved trace.
+ */
+export function ResearchMessage({
+  text,
+  streaming,
+  live,
+  runId,
+}: {
+  text: string;
+  streaming?: boolean;
+  live?: ResearchView;
+  runId?: string | null;
+}) {
+  const [traceOpen, setTraceOpen] = useState(false);
+  const running = !!streaming && !!live && !live.finishedAt;
+  const id = runId ?? live?.runId ?? null;
+  // Reloaded answers need the run for everything; live ones only for the trace button.
+  const { run, loading } = useRun(id, (!live && !!id) || traceOpen);
+  const history = useMemo(() => (!live && run ? viewFromRun(run, text) : undefined), [live, run, text]);
+  const view = live ?? history;
+
+  if (running && live) {
+    return (
+      <>
+        <ResearchPanel view={live} streaming={streaming} />
+        {text && <ResearchAnswer text={text} view={live} streaming={streaming} />}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {view ? (
+        <>
+          <ResearchAnswer text={text} view={view} />
+          <WarningBanners view={view} />
+          <SourcesBlock view={view} />
+          <ResearchFooter view={view} />
+        </>
+      ) : (
+        // Loading (or run deleted): the saved answer without its markdown Sources list.
+        <>
+          <Markdown text={splitSources(text).body.trimEnd()} />
+          {loading && <p className="mt-2 text-[11.5px] text-[var(--muted)]">Loading research details…</p>}
+        </>
+      )}
+      {id && (
+        <div className="mt-3">
+          <button
+            onClick={() => setTraceOpen((o) => !o)}
+            aria-expanded={traceOpen}
+            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg border border-[var(--border)] text-[12px] text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)] transition"
+          >
+            <ListTree size={13} /> {traceOpen ? "Hide research trace" : "View research trace"}
+          </button>
+          {traceOpen && <ResearchTrace run={run} loading={loading} answerText={text} />}
+        </div>
+      )}
+    </>
+  );
+}
+
+/** The saved Reason / Act / Observe timeline for a finished run (no live timer). */
+function ResearchTrace({ run, loading, answerText }: { run: RunData | null; loading: boolean; answerText: string }) {
+  const items = useMemo(() => (run ? traceFromRun(run) : []), [run]);
+  const view = useMemo(() => (run ? viewFromRun(run, answerText) : undefined), [run, answerText]);
+  if (loading) return <p className="mt-2 text-[12px] text-[var(--muted)]">Loading research trace…</p>;
+  if (!run || !view) return <p className="mt-2 text-[12px] text-red-400">This research run is no longer available.</p>;
+
+  const elapsed = (run.finishedAt ?? run.startedAt) - run.startedAt;
+  return (
+    <div className="mt-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] text-[12.5px]">
+      <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-[var(--border)]">
+        <Telescope size={14} className="text-[var(--accent)]" />
+        <span className="font-medium shrink-0">Research trace</span>
+        <span className="text-[var(--muted)] truncate">· {run.question}</span>
+        <span className="ml-auto tabular-nums text-[var(--muted)]">{secs(run.totalLatencyMs ?? elapsed)}</span>
+      </div>
+      <ol className="px-3.5 py-3 space-y-1.5 max-h-[420px] overflow-y-auto">
+        {items.length === 0 && <li className="text-[var(--muted)]">No steps were saved for this run.</li>}
+        {items.map((item, i) => (
+          <TraceLine key={i} item={item} isLast={false} running={false} now={0} />
+        ))}
+        {run.cancelled && (
+          <li className="flex gap-2 text-amber-500">
+            <span className="w-5 shrink-0" />
+            <CircleX size={13} className="mt-0.5 shrink-0" />
+            <span>Research stopped before an answer was produced.</span>
+          </li>
+        )}
+        {!run.report && (
+          <li className="text-[11px] text-[var(--muted)] pt-1">
+            Saved before research reports were stored: reasoning and warnings are not available for this run.
+          </li>
+        )}
+      </ol>
+      <div className="px-3.5 pb-3">
+        <ResearchFooter view={view} />
+      </div>
+    </div>
   );
 }

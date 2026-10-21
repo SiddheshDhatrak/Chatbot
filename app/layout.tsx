@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Claude — Maison d'IA",
+  title: "Nexora — Maison d'IA",
   description: "A luxurious AI chat salon with persistent history, powered by Groq",
 };
 

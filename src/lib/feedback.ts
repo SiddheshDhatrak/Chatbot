@@ -1,8 +1,9 @@
 /** Persisted message feedback (thumbs up/down), stored locally per message id. */
+import "./storageKeys";
 
 export type FeedbackValue = "up" | "down";
 
-const KEY = "claude-feedback-v1";
+const KEY = "nexora-feedback-v1";
 
 function readAll(): Record<string, FeedbackValue> {
   try {
@@ -34,5 +35,5 @@ export function setFeedback(id: string, value: FeedbackValue | null): void {
   } catch {
     /* private mode */
   }
-  window.dispatchEvent(new CustomEvent("claude-feedback", { detail: { id, value } }));
+  window.dispatchEvent(new CustomEvent("nexora-feedback", { detail: { id, value } }));
 }

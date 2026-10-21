@@ -88,6 +88,8 @@ export interface AgentMetrics {
   tokens: { prompt: number; completion: number; total: number } | null;
   sourcesFound: number;
   pagesRead: number;
+  /** Step limit this run used. */
+  maxSteps: number;
   /** Notes saved by the model itself. */
   notesSaved: number;
   /** Notes the harness saved because the model saved none. */
@@ -290,7 +292,7 @@ const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n)}…` : s
 // The harness
 // ---------------------------------------------------------------------------
 
-export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent> {
+async function* runAgentCore(input: RunAgentInput): AsyncGenerator<AgentEvent> {
   const t0 = Date.now();
   // Use the first working tool-calling model for this API key.
   const { model, skipped, noneAvailable } = await resolveResearchModel(input.model);
@@ -835,6 +837,7 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
     autoNotesSaved,
     noteReminders,
     citationRepairs,
+    maxSteps,
     citationPrecision: report.precision,
     snippetOnlyCitations: report.snippetOnlyCount,
     supportRate: report.supportRate,
@@ -867,4 +870,65 @@ export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent
   }
 
   yield { type: "done", metrics };
+}
+
+// ===========================================================================
+//  Public entry point: the ReAct harness + a persisted report
+// ===========================================================================
+
+/** Stored in Run.reportJson so a reloaded answer renders like a live one. */
+export interface StoredReport {
+  version: 1;
+  citationReport: CitationReport | null;
+  sources: SourceRef[];
+  metrics: AgentMetrics | null;
+  warnings: string[];
+  /** Every event except the answer text, so the trace (incl. reasoning) can be replayed. */
+  events: AgentEvent[];
+  maxSteps: number | null;
+}
+
+/**
+ * Runs the harness and passes every event through unchanged. Before the
+ * final "done" event it saves the citation report, sources, metrics,
+ * warnings and the event log to Run.reportJson (plus Run.maxSteps), so
+ * GET /api/runs/:id can rebuild the answer view after a reload.
+ */
+export async function* runAgent(input: RunAgentInput): AsyncGenerator<AgentEvent> {
+  let runId: string | null = null;
+  const events: AgentEvent[] = [];
+  let report: CitationReport | null = null;
+  let sources: SourceRef[] = [];
+
+  for await (const ev of runAgentCore(input)) {
+    if (ev.type === "run_start") runId = ev.runId;
+    if (ev.type === "answer") {
+      report = ev.citationReport;
+      sources = ev.sources;
+      events.push({ ...ev, text: "" }); // answer text already lives in Run.finalAnswer / Message
+    } else if (ev.type !== "done") {
+      events.push(ev);
+    }
+
+    if (ev.type === "done" && runId) {
+      const stored: StoredReport = {
+        version: 1,
+        citationReport: report,
+        sources,
+        metrics: ev.metrics,
+        warnings: events.flatMap((e) => (e.type === "warning" ? [e.message] : [])),
+        events,
+        maxSteps: ev.metrics.maxSteps ?? null,
+      };
+      try {
+        await db.run.update({
+          where: { id: runId },
+          data: { reportJson: JSON.stringify(stored), maxSteps: stored.maxSteps },
+        });
+      } catch (err) {
+        yield { type: "warning", message: `Could not save the research report: ${errorText(err)}` };
+      }
+    }
+    yield ev;
+  }
 }

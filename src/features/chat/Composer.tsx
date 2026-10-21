@@ -164,7 +164,7 @@ export function Composer({ onSend }: { onSend: (t: string) => void }) {
             placeholder={
               researchMode
                 ? "Ask a research question — NEXORA will search, read and cite…"
-                : "Message Claude — ask for anything, beautifully…"
+                : "Message Nexora — ask for anything, beautifully…"
             }
             className="w-full bg-transparent resize-none outline-none text-[14.5px] leading-relaxed placeholder:text-[var(--muted)] max-h-[180px] py-2"
           />
@@ -245,7 +245,7 @@ export function Composer({ onSend }: { onSend: (t: string) => void }) {
           </div>
         </div>
         <p className="text-center text-[11px] text-[var(--muted)] mt-2.5 tracking-wide">
-          {listening ? "Listening… speak now." : "Claude may compose imperfectly — please verify precious details."}
+          {listening ? "Listening… speak now." : "Nexora may compose imperfectly — please verify precious details."}
         </p>
       </div>
     </div>

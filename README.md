@@ -1,4 +1,4 @@
-# Claude — Maison d'IA
+# Nexora — Maison d'IA
 
 A self-hosted AI chat salon. Pick a Groq model, stream replies live, and keep every conversation in your own SQLite database. No accounts, no tiers.
 

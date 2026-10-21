@@ -1,3 +1,5 @@
+import "./storageKeys";
+
 /** Single source of truth for selectable chat models (both Vite + Next). */
 
 export interface ModelOption {
@@ -17,7 +19,7 @@ export const DEFAULT_MODEL_ID = "openai/gpt-oss-120b";
 export const DEFAULT_MODEL =
   (typeof process !== "undefined" && process.env?.GROQ_MODEL) || DEFAULT_MODEL_ID;
 
-const KEY = "claude-model";
+const KEY = "nexora-model";
 
 export function getModel(): string {
   try {

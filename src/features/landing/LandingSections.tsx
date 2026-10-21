@@ -34,7 +34,7 @@ export function LandingNav() {
         <div className="glass rounded-full pl-4 pr-2 py-2 flex items-center justify-between shadow-[var(--shadow-luxe)]">
           <Link to="/" className="flex items-center gap-2">
             <StarMark size={28} />
-            <span className="font-display text-[18px]">Claude</span>
+            <span className="font-display text-[18px]">Nexora</span>
           </Link>
           <div className="hidden md:flex items-center gap-7 text-[13.5px] text-[var(--foreground-dim)]">
             {NAV_LINKS.map((l) => (
@@ -98,7 +98,7 @@ export function LandingHero() {
               {["#e08a6d", "#c9a96a", "#7fb685"].map((c) => (
                 <span key={c} className="w-2.5 h-2.5 rounded-full" style={{ background: c }} />
               ))}
-              <span className="ml-3 text-[12px] text-[var(--muted)] font-mono">claude — salon privé</span>
+              <span className="ml-3 text-[12px] text-[var(--muted)] font-mono">nexora — salon privé</span>
               <span className="ml-auto text-[11px] px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent)]/25">
                 ● live preview
               </span>
@@ -113,7 +113,7 @@ export function LandingHero() {
                 <div className="flex gap-3">
                   <StarMark size={26} />
                   <div className="text-[13.5px] leading-relaxed text-[var(--foreground-dim)]">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)] mb-1">Claude</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)] mb-1">Nexora</p>
                     Consider it tailored — stable keys, memoized rows, semantic markup.
                     <pre className="mt-3 text-[11.5px] font-mono p-3.5 rounded-xl overflow-x-auto border border-[var(--border)] bg-[var(--code-bg)] text-[#f5f1e8]">
 {`const Row = memo(({ value }) => <li>{value}</li>);`}
@@ -225,7 +225,7 @@ export function FinalCTA() {
         <Button size="lg">Enter the salon <ArrowUpRight size={16} /></Button>
       </Link>
       <footer className="mt-20 pt-8 border-t border-[var(--border)] flex flex-col md:flex-row items-center justify-between gap-3 text-[12px] text-[var(--muted)]">
-        <span className="font-display italic text-[15px] text-[var(--foreground-dim)]">Claude — maison d’IA</span>
+        <span className="font-display italic text-[15px] text-[var(--foreground-dim)]">Nexora — maison d’IA</span>
         <span>Self-hosted demo · Groq + SQLite · Noir & Ivory editions</span>
       </footer>
     </section>

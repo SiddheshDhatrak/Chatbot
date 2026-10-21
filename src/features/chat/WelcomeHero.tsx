@@ -41,7 +41,7 @@ export function WelcomeHero({ onPick }: { onPick: (prompt: string) => void }) {
         transition={{ delay: 0.22, duration: 0.6 }}
         className="mt-4 text-[14.5px] text-[var(--muted)] max-w-[520px] mx-auto leading-relaxed"
       >
-        Claude composes, codes, reasons and refines — in a salon crafted for deep work.
+        Nexora composes, codes, reasons and refines — in a salon crafted for deep work.
         Choose a prelude below, or write your own overture.
       </motion.p>
 

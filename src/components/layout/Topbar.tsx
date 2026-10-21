@@ -45,7 +45,7 @@ export function Topbar({ title }: { title: string }) {
         <button
           className="w-9 h-9 rounded-full grid place-items-center text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)] transition"
           title="More actions (⌘K for commands)"
-          onClick={() => window.dispatchEvent(new Event("claude:palette"))}
+          onClick={() => window.dispatchEvent(new Event("nexora:palette"))}
         >
           <MoreHorizontal size={17} />
         </button>

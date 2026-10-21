@@ -16,7 +16,7 @@ export default function Home() {
           <StarMark size={72} className="relative" />
         </div>
         <h1 className="font-display text-[36px] md:text-[54px] leading-[1.05] mt-6">
-          Claude <span className="italic champagne-text">Maison d&rsquo;IA</span>
+          Nexora <span className="italic champagne-text">Maison d&rsquo;IA</span>
         </h1>
         <p className="mt-4 text-[14.5px] text-[var(--muted)] max-w-[520px] mx-auto leading-relaxed">
           A self-hosted AI chat salon — pick a Groq model, stream replies live,

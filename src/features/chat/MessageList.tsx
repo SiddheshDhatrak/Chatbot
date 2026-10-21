@@ -9,7 +9,7 @@ import { Markdown } from "@/components/ui/Markdown";
 import { getFeedback, setFeedback, type FeedbackValue } from "@/lib/feedback";
 import { toggleReadAloud, canSpeak, stopSpeaking, copyText } from "@/lib/speech";
 import { cn } from "@/lib/cn";
-import { ResearchAnswer, ResearchFooter, ResearchPanel, SourcesBlock } from "@/features/chat/Research";
+import { ResearchMessage } from "@/features/chat/Research";
 
 export function MessageList({ messages }: { messages: Message[] }) {
   const endRef = useRef<HTMLDivElement>(null);
@@ -65,8 +65,8 @@ function AssistantRow({ message }: { message: Message }) {
       const d = (e as CustomEvent).detail;
       if (d?.id === message.id) setFb(d.value);
     };
-    window.addEventListener("claude-feedback", fn);
-    return () => window.removeEventListener("claude-feedback", fn);
+    window.addEventListener("nexora-feedback", fn);
+    return () => window.removeEventListener("nexora-feedback", fn);
   }, [message.id]);
 
   useEffect(() => () => stopSpeaking(), []);
@@ -92,6 +92,8 @@ function AssistantRow({ message }: { message: Message }) {
     );
   }
 
+  const isResearch = !!message.research || !!message.runId;
+
   const vote = (v: FeedbackValue) => {
     const next = feedback === v ? null : v;
     setFeedback(message.id, next);
@@ -108,15 +110,16 @@ function AssistantRow({ message }: { message: Message }) {
       <StarMark size={30} className="mt-1 shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-1.5">
-          {message.research ? "NEXORA · Research" : "Claude"}
+          {isResearch ? "Nexora · Research" : "Nexora"}
         </p>
-        {message.research ? (
-          <>
-            <ResearchPanel view={message.research} streaming={message.streaming} />
-            {message.text && <ResearchAnswer text={message.text} view={message.research} streaming={message.streaming} />}
-            <SourcesBlock view={message.research} />
-            <ResearchFooter view={message.research} />
-          </>
+        {isResearch ? (
+          // Live answers carry `research`; reloaded ones only a runId (loaded lazily).
+          <ResearchMessage
+            text={message.text}
+            streaming={message.streaming}
+            live={message.research}
+            runId={message.runId}
+          />
         ) : (
           <Markdown text={message.text} streaming={message.streaming} />
         )}
@@ -158,7 +161,7 @@ function AssistantRow({ message }: { message: Message }) {
               <ThumbsDown size={13} />
             </ActionBtn>
             {/* Retry re-runs plain chat, so it is hidden on research answers. */}
-            {!message.research && (
+            {!isResearch && (
               <ActionBtn
                 title="Retry last reply"
                 className="gap-1.5 !px-2.5"

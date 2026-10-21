@@ -21,10 +21,10 @@ export function CommandPalette() {
     };
     const custom = () => setOpen(true);
     window.addEventListener("keydown", fn);
-    window.addEventListener("claude:palette", custom);
+    window.addEventListener("nexora:palette", custom);
     return () => {
       window.removeEventListener("keydown", fn);
-      window.removeEventListener("claude:palette", custom);
+      window.removeEventListener("nexora:palette", custom);
     };
   }, []);
 

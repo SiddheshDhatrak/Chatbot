@@ -1,3 +1,4 @@
+import "@/lib/storageKeys"; // renames old "claude-*" storage keys before persist reads them
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Theme } from "@/lib/theme";
@@ -30,6 +31,8 @@ export interface Session {
   title: string;
   updatedAt: number;
   messages: Message[];
+  /** NEXORA: session contains research runs (sidebar icon). */
+  hasResearch?: boolean;
 }
 export interface Artifact {
   title: string;
@@ -186,6 +189,7 @@ export const useChatStore = create<ChatState>()(
                 title: m.title,
                 updatedAt: m.updatedAt,
                 messages: local?.messages ?? [],
+                hasResearch: m.hasResearch ?? local?.hasResearch,
               };
             });
             // keep unsent local-only drafts at the top
@@ -224,6 +228,7 @@ export const useChatStore = create<ChatState>()(
                   title: firstMsg ? titleFrom(text) : s.title,
                   updatedAt: Date.now(),
                   messages: [...s.messages, userMsg],
+                  ...(get().researchMode ? { hasResearch: true } : {}),
                 }
               : s,
           ),
@@ -364,7 +369,7 @@ export const useChatStore = create<ChatState>()(
           set((st) => ({
             sessions: st.sessions.map((s) =>
               s.id === serverId && meta
-                ? { ...s, title: meta.title, updatedAt: meta.updatedAt }
+                ? { ...s, title: meta.title, updatedAt: meta.updatedAt, hasResearch: meta.hasResearch ?? s.hasResearch }
                 : s,
             ),
           }));
@@ -497,7 +502,7 @@ export const useChatStore = create<ChatState>()(
       },
     }),
     {
-      name: "claude-luxe-store-v2",
+      name: "nexora-store-v2",
       partialize: (s) =>
         ({ theme: s.theme, sidebarOpen: s.sidebarOpen, model: s.model, researchMode: s.researchMode }) as ChatState,
     },

@@ -18,7 +18,12 @@ export interface TraceItem {
   latencyMs?: number;
   /** For "pause": how long the harness said it would wait. */
   pauseMs?: number;
+  /** Saved runs only: full observation excerpt, shown when the line is expanded. */
+  detail?: string;
 }
+
+/** A source as the UI shows it. wasRead is set for runs without a stored report. */
+export type UISource = SourceRef & { wasRead?: boolean };
 
 export interface ResearchView {
   runId?: string;
@@ -26,8 +31,13 @@ export interface ResearchView {
   startedAt: number;
   finishedAt?: number;
   items: TraceItem[];
-  answer?: { sources: SourceRef[]; report: CitationReport };
+  /** report is missing for runs saved before reports were stored. */
+  answer?: { sources: UISource[]; report?: CitationReport };
   metrics?: AgentMetrics;
+  /** Old runs: whatever the Run row still knows. */
+  partialMetrics?: Partial<AgentMetrics>;
+  /** Built from a saved run (no live timer). */
+  historical?: boolean;
 }
 
 export const newResearchView = (): ResearchView => ({ startedAt: Date.now(), items: [] });
@@ -88,4 +98,11 @@ export function domainOf(url: string): string {
   } catch {
     return url;
   }
+}
+
+/** Warnings worth showing as banners under the answer (not pauses or note reminders). */
+export function answerWarnings(view: ResearchView): string[] {
+  return view.items
+    .filter((i) => i.kind === "warning" && !/^Reminded the model to save_note/.test(i.text))
+    .map((i) => i.text);
 }

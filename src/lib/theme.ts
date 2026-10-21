@@ -1,6 +1,8 @@
+import "./storageKeys";
+
 export type Theme = "noir" | "ivory";
 
-const KEY = "claude-theme";
+const KEY = "nexora-theme";
 
 export function getTheme(): Theme {
   try {
