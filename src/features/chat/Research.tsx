@@ -29,6 +29,7 @@ import {
   type UISource,
 } from "@/lib/research";
 import { fetchRun, traceFromRun, viewFromRun, type RunData } from "@/lib/runs";
+import { modelLabel } from "@/lib/models";
 import { cn } from "@/lib/cn";
 
 export const UNSUPPORTED_TIP = "The cited page does not contain this claim's figures";
@@ -86,6 +87,7 @@ export function ResearchPanel({ view, streaming }: { view: ResearchView; streami
           <Telescope size={14} className={cn("text-[var(--accent)]", running && "animate-pulse")} />
         )}
         <span className={cn("font-medium", waiting && "text-amber-500")}>{headline}</span>
+        {view.model && <span className="text-[var(--muted)] truncate">· {modelLabel(view.model)}</span>}
         <span className="ml-auto tabular-nums text-[var(--muted)]">{secs(elapsed)}</span>
         <ChevronDown size={14} className={cn("text-[var(--muted)] transition-transform", open && "rotate-180")} />
       </button>
@@ -540,6 +542,7 @@ function ResearchTrace({ run, loading, answerText }: { run: RunData | null; load
       <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-[var(--border)]">
         <Telescope size={14} className="text-[var(--accent)]" />
         <span className="font-medium shrink-0">Research trace</span>
+        <span className="text-[var(--muted)] shrink-0">· {modelLabel(run.model)}</span>
         <span className="text-[var(--muted)] truncate">· {run.question}</span>
         <span className="ml-auto tabular-nums text-[var(--muted)]">{secs(run.totalLatencyMs ?? elapsed)}</span>
       </div>

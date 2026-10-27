@@ -4,7 +4,7 @@ import { memo, useRef, useState, useEffect, useSyncExternalStore } from "react";
 const noopSubscribe = () => () => {};
 import { ArrowUp, Square, Plus, Mic, MicOff, X, FileText, Telescope } from "lucide-react";
 import { useChatStore } from "@/store/useChatStore";
-import { modelLabel } from "@/lib/models";
+import { isResearchOnlyModel, modelLabel, RESEARCH_ONLY_NOTE } from "@/lib/models";
 import { hasVoiceInput, startDictation } from "@/lib/speech";
 import { cn } from "@/lib/cn";
 
@@ -33,6 +33,7 @@ export const Composer = memo(function Composer({ onSend }: { onSend: (t: string)
   const model = useChatStore((s) => s.model);
   const stop = useChatStore((s) => s.stop);
   const researchMode = useChatStore((s) => s.researchMode);
+  const researchLocked = isResearchOnlyModel(model); // e.g. Nemotron on OpenRouter
   const setResearchMode = useChatStore((s) => s.setResearchMode);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -220,10 +221,12 @@ export const Composer = memo(function Composer({ onSend }: { onSend: (t: string)
               </ComposerIcon>
               <button
                 onClick={() => setResearchMode(!researchMode)}
-                disabled={isTyping}
+                disabled={isTyping || researchLocked}
                 aria-pressed={researchMode}
                 title={
-                  researchMode
+                  researchLocked
+                    ? RESEARCH_ONLY_NOTE
+                    : researchMode
                     ? "Research mode on: NEXORA searches the web, reads pages and cites sources. Click for normal chat."
                     : "Research mode: search the web, read pages and answer with citations"
                 }
@@ -234,6 +237,7 @@ export const Composer = memo(function Composer({ onSend }: { onSend: (t: string)
                     ? "bg-[var(--accent)] text-[var(--accent-ink)] border-[var(--accent)] shadow-[0_0_0_3px_var(--accent-soft),0_0_18px_var(--accent-soft)]"
                     : "text-[var(--foreground)] border-[var(--accent)]/55 bg-[var(--accent-soft)]/40 hover:bg-[var(--accent-soft)] hover:border-[var(--accent)]",
                   isTyping && "opacity-40 pointer-events-none",
+                  researchLocked && "cursor-not-allowed",
                 )}
               >
                 <Telescope size={14} className={researchMode ? "" : "text-[var(--accent)]"} />
@@ -244,9 +248,10 @@ export const Composer = memo(function Composer({ onSend }: { onSend: (t: string)
                     researchMode ? "bg-[var(--accent-ink)]/15" : "text-[var(--muted)]",
                   )}
                 >
-                  {researchMode ? "on" : "off"}
+                  {researchLocked ? "locked" : researchMode ? "on" : "off"}
                 </span>
               </button>
+              {researchLocked && <span className="ml-1 text-[11px] text-[var(--accent)]">{RESEARCH_ONLY_NOTE}</span>}
               <span className="hidden md:inline ml-2 text-[11px] text-[var(--muted)]">
                 {modelLabel(model)} · <kbd className="px-1.5 py-0.5 rounded-md hairline text-[10px]">↵</kbd> send ·{" "}
                 <kbd className="px-1.5 py-0.5 rounded-md hairline text-[10px]">⇧↵</kbd> newline

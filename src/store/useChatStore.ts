@@ -2,7 +2,7 @@ import "@/lib/storageKeys"; // renames old "claude-*" storage keys before persis
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Theme } from "@/lib/theme";
-import { getModel, isSelectableModel, setStoredModel } from "@/lib/models";
+import { getModel, isResearchOnlyModel, isSelectableModel, setStoredModel } from "@/lib/models";
 import {
   chatEvents,
   listSessions,
@@ -114,11 +114,12 @@ export const useChatStore = create<ChatState>()(
       composerDraft: null,
       fillComposer: (text) => set({ composerDraft: { text, nonce: Date.now() } }),
 
-      setResearchMode: (v) => set({ researchMode: v }),
+      // A research-only model (e.g. Nemotron on OpenRouter) keeps Research mode locked on.
+      setResearchMode: (v) => set({ researchMode: isResearchOnlyModel(get().model) ? true : v }),
       setTheme: (t) => set({ theme: t }),
       setModel: (m) => {
         setStoredModel(m);
-        set({ model: m });
+        set(isResearchOnlyModel(m) ? { model: m, researchMode: true } : { model: m });
       },
       setSidebarOpen: (v) => set({ sidebarOpen: v }),
       setArtifactOpen: (v) => set({ artifactOpen: v }),
@@ -549,7 +550,8 @@ export const useChatStore = create<ChatState>()(
       // A model saved earlier may no longer be offered (e.g. Llama on this key): fall back to the default.
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<ChatState>;
-        return { ...current, ...p, model: isSelectableModel(p.model) ? p.model! : current.model };
+        const model = isSelectableModel(p.model) ? p.model! : current.model;
+        return { ...current, ...p, model, ...(isResearchOnlyModel(model) ? { researchMode: true } : {}) };
       },
     },
   ),

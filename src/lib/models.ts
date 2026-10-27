@@ -6,6 +6,8 @@ export interface ModelOption {
   id: string;
   label: string;
   hint: string;
+  /** Only usable in Research mode (ai.ts streaming talks to Groq only). */
+  researchOnly?: boolean;
 }
 
 /**
@@ -16,7 +18,20 @@ export interface ModelOption {
 export const AVAILABLE_MODELS: ModelOption[] = [
   { id: "openai/gpt-oss-120b", label: "GPT-OSS 120B", hint: "Default · Groq" },
   { id: "openai/gpt-oss-20b", label: "GPT-OSS 20B", hint: "Faster · Groq" },
+  {
+    id: "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free",
+    label: "Nemotron 3 Ultra (OpenRouter, research only)",
+    hint: "Research only · OpenRouter free tier",
+    researchOnly: true,
+  },
 ];
+
+/** True for picker models that only work in Research mode. */
+export function isResearchOnlyModel(id: unknown): boolean {
+  return typeof id === "string" && AVAILABLE_MODELS.some((m) => m.id === id && m.researchOnly);
+}
+
+export const RESEARCH_ONLY_NOTE = "This model works in research mode only";
 
 /** True if `id` is offered by the picker. */
 export function isSelectableModel(id: unknown): id is string {

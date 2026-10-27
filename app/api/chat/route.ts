@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/server/db";
 import { streamReply, SYSTEM_PROMPT, type ChatMsg } from "@/server/ai";
-import { sanitizeModel } from "@/lib/models";
+import { isResearchOnlyModel, RESEARCH_ONLY_NOTE, sanitizeModel } from "@/lib/models";
 import { runAgent, splitSources, STOPPED_MESSAGE } from "@/server/agent";
 import { withStoppedMarker } from "@/lib/chatMarkers";
 
@@ -41,6 +41,9 @@ export async function POST(req: NextRequest) {
   if (message.length > 24000)
     return Response.json({ error: "Message too long (max 24000 chars)" }, { status: 413 });
   if (body.mode === "research") return researchResponse(req, body, message);
+  // Normal chat streams from Groq only: research-only (OpenRouter) models are refused, not crashed on.
+  if (isResearchOnlyModel(body.model) || (typeof body.model === "string" && body.model.startsWith("openrouter:")))
+    return Response.json({ error: `${RESEARCH_ONLY_NOTE}. Turn on Research mode or pick a Groq model.` }, { status: 400 });
   const model = sanitizeModel(body.model) ?? undefined;
 
   // Resolve or create the session, then persist the user message.
